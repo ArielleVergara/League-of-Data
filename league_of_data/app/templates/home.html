@@ -1,9 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
 <body>
-
-<h1>Hello World!</h1>
-<p>Welcome to my first Django project!</p>
-
+    <form action="{% url 'get_data_visualization' %}" method="POST">
+        {% csrf_token %}
+        <input type="text" id="summoner_name" name="summoner_name" placeholder="Nombre Invocador">
+        <input type="text" id="summoner_tag" name="summoner_tag" placeholder="Tag Invocador">
+        <input class="btn btn-primary" type="submit" value="Buscar">
+    </form>
 </body>
 </html>
