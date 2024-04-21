@@ -1,60 +1,74 @@
 import requests
-
-api_key = "RGAPI-6d4b46d7-1bdf-4c33-b16b-823785fb3231"
-tag = "ttv"
-summoner_name = 'LoboSkoll'
-region = 'Americas'
+from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 
 
 def get_summoner_puuid(summoner_name, tag, region, api_key):
-    url_start = "http://"
+    url_start = "https://"
     url_finish = ".api.riotgames.com/riot/account/v1/accounts/by-riot-id/"
-    api_url = url_start + region + url_finish + summoner_name + tag + "?api_key=" + api_key
+    api_url = f"{url_start}{region}{url_finish}{summoner_name}/{tag}?api_key={api_key}"
+    summoner_puuid = None  # Initialize to ensure variable is defined
 
     try:
         resp_summoner = requests.get(api_url)
-        if resp_summoner == 200:
-            summoner_info = resp_summoner.json()
-            summoner_puuid = summoner_info['puuid']
-        else:
-            print("No tiene acceso válido a la API Account (response != 200)")
-    except:
-        print("No se pudo conectar con la API Account")
+        resp_summoner.raise_for_status()  # This will raise an HTTPError for bad responses
+        summoner_info = resp_summoner.json()
+        summoner_puuid = summoner_info['puuid']
+    except HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+    except ConnectionError as conn_err:
+        print(f"Connection error occurred: {conn_err}")
+    except Timeout as timeout_err:
+        print(f"Timeout error occurred: {timeout_err}")
+    except RequestException as req_err:
+        print(f"Request exception occurred: {req_err}")
     return summoner_puuid
 
 def get_match_list(summoner_puuid, region, api_key):
-    url_start = "http://"
+    url_start = "https://"
     url_middle = ".api.riotgames.com/lol/match/v5/matches/by-puuid/"
     url_finish = "/ids?type=ranked&start=0&count=20&api_key="
 
-    try:
-        api_url = url_start + region + url_middle + summoner_puuid + url_finish + api_key
+    match_list = []  # Initialize match_list as an empty list
 
+    try:
+        api_url = f"{url_start}{region}{url_middle}{summoner_puuid}{url_finish}{api_key}"
         resp_list = requests.get(api_url)
-        if resp_list == 200:
-            match_list = resp_list.json()
-        else:
-            print("No se ha podido acceder a la API Match List")
-    except:
-        print("No se pudo conectar con la API Matches")
+        resp_list.raise_for_status()  # This will raise an HTTPError for bad responses
+        match_list = resp_list.json()  # Assign the actual list if the request is successful
+    except HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+    except ConnectionError as conn_err:
+        print(f"Connection error occurred: {conn_err}")
+    except Timeout as timeout_err:
+        print(f"Timeout error occurred: {timeout_err}")
+    except RequestException as req_err:
+        print(f"Request exception occurred: {req_err}")
     return match_list
 
-def get_match_data (match_list, region, api_key):
-    url_start = "http://"
+def get_match_data(match_list, region, api_key):
+    url_start = "https://"
     url_middle = ".api.riotgames.com/lol/match/v5/matches/"
     url_finish = "?api_key="
     
-    for match in match_list:
-        return match
-    
-    url_api = url_start + region + url_middle + match + url_finish + api_key
+    all_match_data = []  # Initialize an empty list to store data for all matches
 
-    resp_match = requests.get(url_api)
-    if resp_match == 200:
-        match_data = resp_match.json()
-    else:
-        print("No se ha podido acceder a la API Match(1)")
-    return match_data
+    for match_id in match_list:
+        api_url = f"{url_start}{region}{url_middle}{match_id}{url_finish}{api_key}"
+        try:
+            resp_match = requests.get(api_url)
+            resp_match.raise_for_status()  # This will raise an HTTPError for bad responses
+            match_data = resp_match.json()
+            all_match_data.append(match_data)  # Append the match data to the list
+        except HTTPError as http_err:
+            print(f"No se ha podido acceder a la API Match para el match ID {match_id} (response != 200): {http_err}")
+        except ConnectionError as conn_err:
+            print(f"No se pudo conectar con la API Matches para el match ID {match_id}: {conn_err}")
+        except Timeout as timeout_err:
+            print(f"Timeout error occurred for match ID {match_id}: {timeout_err}")
+        except RequestException as req_err:
+            print(f"Request exception occurred for match ID {match_id}: {req_err}")
+
+    return all_match_data
 
 def get_summoner_index(match_data, summoner_puuid):
     summoner_index = match_data['metadata']['participants'].index(summoner_puuid)
@@ -171,4 +185,3 @@ def get_timePlayed(summoner_data):
 def get_win(summoner_data):
     summoner_win = summoner_data['win']
     return summoner_win
-

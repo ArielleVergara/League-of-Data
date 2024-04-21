@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,9 +7,27 @@
 </head>
 <body>
     <div>
-        <form>
-            
-        </form>
+        <h2>Match Data for {{ summoner_name }}</h2>
+        {% if match_data %}
+            <ul>
+                {% for match in match_data %}
+                    <li>Match ID: {{ match.match_id }}</li>
+                    <li>Champion: {{ match.championName }}</li>
+                    <li>Kills: {{ match.kills }}</li>
+                    <li>Assists: {{ match.assists }}</li>
+                    <li>Deaths: {{ match.deaths }}</li>
+                    <li>Gold Earned: {{ match.goldEarned }}</li>
+                    <li>Total Damage Dealt: {{ match.totalDamageDealt }}</li>
+                    <li>Total Damage Taken: {{ match.totalDamageTaken }}</li>
+                    <li>Role: {{ match.role }}</li>
+                    <li>Lane: {{ match.lane }}</li>
+                    <li>Win: {{ match.win }}</li>
+                    <hr>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No match data available.</p>
+        {% endif %}
     </div>
 </body>
 </html>

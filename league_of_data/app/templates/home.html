@@ -6,11 +6,39 @@
     <title>Home</title>
 </head>
 <body>
-    <form action="get_summoner_info" method="POST">
-            
-
+    <form id="summonerInfoForm" action="{% url 'get_summoner_info' %}" method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
         <input class="btn btn-primary" type="submit" value="Buscar">
     </form>
     <p>Holas</p>
+    
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('#summonerInfoForm').submit(function(e){
+                e.preventDefault(); // Prevent default form submission
+                $.ajax({
+                    type: 'POST',
+                    url: '/get_summoner_info', // Adjust if needed
+                    data: $(this).serialize(),
+                    success: function(response){
+                        // Check for the redirectUrl in the response
+                        if(response.redirectUrl) {
+                            window.location.href = response.redirectUrl; // Redirect to the URL
+                        } else {
+                            // Handle case where no redirectUrl is provided
+                            console.error("No redirect URL provided.");
+                        }
+                    },
+                    error: function(xhr, errmsg, err){
+                        // Handle errors
+                        console.log(xhr.status + ": " + xhr.responseText);
+                    }
+                });
+            });
+        });
+        </script>
 </body>
 </html>
