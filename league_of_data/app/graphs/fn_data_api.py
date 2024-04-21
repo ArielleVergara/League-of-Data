@@ -11,12 +11,15 @@ def get_summoner_puuid(summoner_name, tag, region, api_key):
     url_finish = ".api.riotgames.com/riot/account/v1/accounts/by-riot-id/"
     api_url = url_start + region + url_finish + summoner_name + tag + "?api_key=" + api_key
 
-    resp_summoner = requests.get(api_url)
-    if resp_summoner == 200:
-        summoner_info = resp_summoner.json()
-        summoner_puuid = summoner_info['puuid']
-    else:
-        print("No se ha podido acceder a la API Account")
+    try:
+        resp_summoner = requests.get(api_url)
+        if resp_summoner == 200:
+            summoner_info = resp_summoner.json()
+            summoner_puuid = summoner_info['puuid']
+        else:
+            print("No tiene acceso válido a la API Account (response != 200)")
+    except:
+        print("No se pudo conectar con la API Account")
     return summoner_puuid
 
 def get_match_list(summoner_puuid, region, api_key):
@@ -24,13 +27,16 @@ def get_match_list(summoner_puuid, region, api_key):
     url_middle = ".api.riotgames.com/lol/match/v5/matches/by-puuid/"
     url_finish = "/ids?type=ranked&start=0&count=20&api_key="
 
-    api_url = url_start + region + url_middle + summoner_puuid + url_finish + api_key
+    try:
+        api_url = url_start + region + url_middle + summoner_puuid + url_finish + api_key
 
-    resp_list = requests.get(api_url)
-    if resp_list == 200:
-        match_list = resp_list.json()
-    else:
-        print("No se ha podido acceder a la API Match List")
+        resp_list = requests.get(api_url)
+        if resp_list == 200:
+            match_list = resp_list.json()
+        else:
+            print("No se ha podido acceder a la API Match List")
+    except:
+        print("No se pudo conectar con la API Matches")
     return match_list
 
 def get_match_data (match_list, region, api_key):

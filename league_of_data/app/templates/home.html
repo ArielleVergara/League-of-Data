@@ -6,10 +6,9 @@
     <title>Home</title>
 </head>
 <body>
-    <form action="{% url 'get_data_visualization' %}" method="POST">
-        {% csrf_token %}
-        <input type="text" id="summoner_name" name="summoner_name" placeholder="Nombre Invocador">
-        <input type="text" id="summoner_tag" name="summoner_tag" placeholder="Tag Invocador">
+    <form action="get_summoner_info" method="POST">
+            
+
         <input class="btn btn-primary" type="submit" value="Buscar">
     </form>
 </body>

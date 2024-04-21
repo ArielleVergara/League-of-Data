@@ -3,6 +3,7 @@ from django.db import models
 class Summoner (models.Model):
     puuid = models.CharField(max_length=255)
     api_summoner_id = models.CharField(max_length=255)
+    region = models.CharField(max_length=30, default=None)
 
 class Match (models.Model):
     summoner_id = models.ForeignKey(Summoner, on_delete=models.CASCADE)
