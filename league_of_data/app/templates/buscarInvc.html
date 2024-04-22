@@ -20,7 +20,7 @@
                     e.preventDefault(); // Prevent default form submission
                     $.ajax({
                         type: 'POST',
-                        url: '/get_summoner_info', // Adjust if needed
+                        url: '/get_summoner_info/', // Adjust if needed
                         data: $(this).serialize(),
                         success: function(response){
                             // Check for the redirectUrl in the response

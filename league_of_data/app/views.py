@@ -22,7 +22,6 @@ def nosotros(request):
 def home(request):
     return render(request, 'home.html')
 
-@csrf_exempt
 def get_summoner_info(request):
     if request.method == "POST":
         form = summoner_info(request.POST)
