@@ -1,0 +1,4 @@
+#Dependencias Necsarios para el Proyecto
+#Para instalar usar 'pip install -r requirements.txt'
+django
+requests

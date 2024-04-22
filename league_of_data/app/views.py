@@ -11,8 +11,10 @@ from .graphs.fn_data_api import (get_summoner_puuid, get_match_list, get_match_d
 from league_of_data import settings
 from django.http import JsonResponse
 
+
 def buscarInvc(request):
-    return render(request, 'buscarInvc.html')
+  form = summoner_info()
+  return render(request, 'buscarInvc.html', {'form': form})
 
 def nosotros(request):
     return render(request, 'nosotros.html')
