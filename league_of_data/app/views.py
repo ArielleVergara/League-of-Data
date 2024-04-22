@@ -11,9 +11,14 @@ from .graphs.fn_data_api import (get_summoner_puuid, get_match_list, get_match_d
 from league_of_data import settings
 from django.http import JsonResponse
 
-def get_home(request):
-  form = summoner_info()
-  return render(request, 'home.html', {'form': form})
+def buscarInvc(request):
+    return render(request, 'buscarInvc.html')
+
+def nosotros(request):
+    return render(request, 'nosotros.html')
+
+def home(request):
+    return render(request, 'home.html')
 
 @csrf_exempt
 def get_summoner_info(request):
@@ -30,7 +35,7 @@ def get_summoner_info(request):
 def data_visualization(request):
     summ_info = request.session.get('summ_info', None)
     if summ_info is None:
-        return redirect('get_home')
+        return redirect('home')
     
     summoner_name, summoner_tag, summoner_region = summ_info
     api_key = settings.RIOT_API_KEY
