@@ -6,11 +6,11 @@ def get_summoner_puuid(summoner_name, tag, region, api_key):
     url_start = "https://"
     url_finish = ".api.riotgames.com/riot/account/v1/accounts/by-riot-id/"
     api_url = f"{url_start}{region}{url_finish}{summoner_name}/{tag}?api_key={api_key}"
-    summoner_puuid = None  # Initialize to ensure variable is defined
+    summoner_puuid = None
 
     try:
         resp_summoner = requests.get(api_url)
-        resp_summoner.raise_for_status()  # This will raise an HTTPError for bad responses
+        resp_summoner.raise_for_status()
         summoner_info = resp_summoner.json()
         summoner_puuid = summoner_info['puuid']
     except HTTPError as http_err:
@@ -23,18 +23,91 @@ def get_summoner_puuid(summoner_name, tag, region, api_key):
         print(f"Request exception occurred: {req_err}")
     return summoner_puuid
 
+def get_account_info (summoner_puuid, api_key):
+    url_start = "https://"
+    url_middle = "la2.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/"
+    url_finish = "?api_key="
+
+    api_url = f"{url_start}{url_middle}{summoner_puuid}{url_finish}{api_key}"
+    account_info = None
+
+    try:
+        resp_account = requests.get(api_url)
+        resp_account.raise_for_status()
+        account_info = resp_account.json()
+    except HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+    except ConnectionError as conn_err:
+        print(f"Connection error occurred: {conn_err}")
+    except Timeout as timeout_err:
+        print(f"Timeout error occurred: {timeout_err}")
+    except RequestException as req_err:
+        print(f"Request exception occurred: {req_err}")
+    return account_info
+
+def get_summoner_id (account_info):
+    summoner_id = account_info['id']
+    return summoner_id
+
+def get_list_ranked_info (summoner_id, api_key):
+    url_start = "https://"
+    url_middle = "la2.api.riotgames.com/lol/league/v4/entries/by-summoner-id/"
+    url_finish = "?api_key="
+
+    api_url = f"{url_start}{url_middle}{summoner_id}{url_finish}{api_key}"
+
+    list_ranked_info = None
+
+    try:
+        resp_ranked = requests.get(api_url)
+        resp_ranked.raise_for_status()
+        list_ranked_info = resp_ranked.json()
+    except HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+    except ConnectionError as conn_err:
+        print(f"Connection error occurred: {conn_err}")
+    except Timeout as timeout_err:
+        print(f"Timeout error occurred: {timeout_err}")
+    except RequestException as req_err:
+        print(f"Request exception occurred: {req_err}")
+    return list_ranked_info
+
+def get_ranked_info (list_ranked_info):
+    ranked_info = list_ranked_info[0]
+    return ranked_info
+
+def get_tier (ranked_info):
+    tier = ranked_info['tier']
+    return tier
+
+def get_rank (ranked_info):
+    rank = ranked_info['rank']
+    return rank
+
+def get_league_points (ranked_info):
+    league_points = ranked_info['leaguePoints']
+    return league_points
+
+def get_total_wins (ranked_info):
+    total_wins = ranked_info['wins']
+    return total_wins
+
+def get_total_losses (ranked_info):
+    total_losses = ranked_info['losses']
+    return total_losses
+
 def get_match_list(summoner_puuid, region, api_key):
     url_start = "https://"
     url_middle = ".api.riotgames.com/lol/match/v5/matches/by-puuid/"
     url_finish = "/ids?type=ranked&start=0&count=20&api_key="
 
-    match_list = []  # Initialize match_list as an empty list
+    match_list = []
 
     try:
         api_url = f"{url_start}{region}{url_middle}{summoner_puuid}{url_finish}{api_key}"
         resp_list = requests.get(api_url)
-        resp_list.raise_for_status()  # This will raise an HTTPError for bad responses
-        match_list = resp_list.json()  # Assign the actual list if the request is successful
+        resp_list.raise_for_status()
+        match_list = resp_list.json()
     except HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")
     except ConnectionError as conn_err:
@@ -50,15 +123,15 @@ def get_match_data(match_list, region, api_key):
     url_middle = ".api.riotgames.com/lol/match/v5/matches/"
     url_finish = "?api_key="
     
-    all_match_data = []  # Initialize an empty list to store data for all matches
+    all_match_data = []
 
     for match_id in match_list:
         api_url = f"{url_start}{region}{url_middle}{match_id}{url_finish}{api_key}"
         try:
             resp_match = requests.get(api_url)
-            resp_match.raise_for_status()  # This will raise an HTTPError for bad responses
+            resp_match.raise_for_status()
             match_data = resp_match.json()
-            all_match_data.append(match_data)  # Append the match data to the list
+            all_match_data.append(match_data)
         except HTTPError as http_err:
             print(f"No se ha podido acceder a la API Match para el match ID {match_id} (response != 200): {http_err}")
         except ConnectionError as conn_err:
@@ -70,12 +143,12 @@ def get_match_data(match_list, region, api_key):
 
     return all_match_data
 
-def get_summoner_index(match_data, summoner_puuid):
-    summoner_index = match_data['metadata']['participants'].index(summoner_puuid)
+def get_summoner_index(all_match_data, summoner_puuid):
+    summoner_index = all_match_data['metadata']['participants'].index(summoner_puuid)
     return summoner_index
 
-def get_summoner_data(match_data, summoner_index):
-    summoner_data = match_data['info']['participants'][summoner_index]
+def get_summoner_data(all_match_data, summoner_index):
+    summoner_data = all_match_data['info']['participants'][summoner_index]
     return summoner_data
 
 def get_kills(summoner_data):
@@ -110,9 +183,38 @@ def get_totalDamageDealt(summoner_data):
     summoner_totalDamageDealt = summoner_data['totalDamageDealt']
     return summoner_totalDamageDealt
 
+
 def get_totalDamageTaken(summoner_data):
     summoner_totalDamageTaken = summoner_data['totalDamageTaken']
     return summoner_totalDamageTaken
+
+def get_totalHeal (summoner_data):
+    summoner_totalHeal = summoner_data['totalHeal']
+    return summoner_totalHeal
+
+def get_totalHealsOnTeammates (summoner_data):
+    summoner_totalHealsOnTeammates = summoner_data['totalHealsOnTeammates']
+    return summoner_totalHealsOnTeammates
+
+def get_totalMinionsKilled (summoner_data):
+    summoner_totalMinionsKilled = summoner_data['totalMinionsKilled']
+    return summoner_totalMinionsKilled
+
+def get_totalTimeSpentDead (summoner_data):
+    summoner_totalTimeSpentDead = summoner_data['totalTimeSpentDead']
+    return summoner_totalTimeSpentDead
+
+def get_unitsHealed (summoner_data):
+    summoner_unitsHealed = summoner_data['unitsHealed']
+    return summoner_unitsHealed
+
+def get_visionScore (summoner_data):
+    summoner_visionScore = summoner_data['visionScore']
+    return summoner_visionScore
+
+def get_wardKilled (summoner_data):
+    summoner_wardKilled = summoner_data['wardKilled']
+    return summoner_wardKilled
 
 def get_role(summoner_data):
     summoner_role = summoner_data['role']
@@ -133,6 +235,10 @@ def get_participantId(summoner_data):
 def get_doubleKills(summoner_data):
     summoner_doubleKills = summoner_data['doubleKills']
     return summoner_doubleKills
+
+def get_tripleKills(summoner_data):
+    summoner_tripleKills = summoner_data['tripleKills']
+    return summoner_tripleKills
 
 def get_firstBloodAssist(summoner_data):
     summoner_firstBloodAssist = summoner_data['firstBloodAssist']
@@ -162,7 +268,7 @@ def get_longestTimeSpentLiving(summoner_data):
     summoner_longestTimeSpentLiving = summoner_data['longestTimeSpentLiving']
     return summoner_longestTimeSpentLiving
 
-def get_spell1Casts(summoner_data):
+def get_spell1Cast(summoner_data):
     summoner_spell1Casts = summoner_data['spell1Casts']
     return summoner_spell1Casts
 

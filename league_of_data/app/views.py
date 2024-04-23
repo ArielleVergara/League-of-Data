@@ -10,6 +10,7 @@ from .graphs.fn_data_api import (get_summoner_puuid, get_match_list, get_match_d
     get_role, get_lane, get_win)
 from league_of_data import settings
 from django.http import JsonResponse
+from .services import save_summoner_matches_and_stats
 
 def get_home(request):
   form = summoner_info()
@@ -20,9 +21,6 @@ def get_summoner_info(request):
     if request.method == "POST":
         form = summoner_info(request.POST)
         if form.is_valid():
-            # Process the form data and set session variables or perform other actions as needed
-            
-            # Then return the JsonResponse with the redirect URL
             return JsonResponse({'redirectUrl': '/data_visualization'})
         else:
             return JsonResponse(form.errors, status=400)
@@ -38,9 +36,11 @@ def data_visualization(request):
     summoner_puuid = get_summoner_puuid(summoner_name, summoner_tag, summoner_region, api_key)
     match_list = get_match_list(summoner_puuid, summoner_region, api_key)
 
+    save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region, api_key)
+
     all_match_details = []
     if match_list:
-        for match_id in match_list[:5]:  # Limit to 5 matches for brevity
+        for match_id in match_list[:5]:
             match_data = get_match_data([match_id], summoner_region, api_key)
             for match in match_data:
                 summoner_index = get_summoner_index(match, summoner_puuid)
