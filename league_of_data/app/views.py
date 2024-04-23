@@ -26,9 +26,15 @@ def get_summoner_info(request):
     if request.method == "POST":
         form = summoner_info(request.POST)
         if form.is_valid():
-            # Process the form data and set session variables or perform other actions as needed
+            # Suponiendo que tu formulario tiene campos para summoner_name, summoner_tag, y summoner_region
+            summoner_name = form.cleaned_data['summoner_name']
+            summoner_tag = form.cleaned_data['summoner_tag']
+            summoner_region = form.cleaned_data['summoner_region']
             
-            # Then return the JsonResponse with the redirect URL
+            # Guardar esta información en la sesión
+            request.session['summ_info'] = [summoner_name, summoner_tag, summoner_region]
+            
+            # Luego, puedes redirigir o devolver la respuesta que desees
             return JsonResponse({'redirectUrl': '/data_visualization'})
         else:
             return JsonResponse(form.errors, status=400)
