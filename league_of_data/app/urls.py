@@ -1,8 +1,10 @@
 from django.urls import path
-from . import views
+from .views import home, data_visualization,get_summoner, buscarInvc, nosotros
 
 urlpatterns = [
-    path('', views.get_home, name='get_home'),
-    path('get_summoner_info', views.get_summoner_info, name='get_summoner_info'),
-    path('data_visualization', views.data_visualization, name='data_visualization'),
+    path('', home, name='home'),
+    path('get_summoner/', get_summoner, name='get_summoner'),
+    path('data_visualization/', data_visualization, name='data_visualization'),
+    path('busqueda/', buscarInvc, name="buscarInvc"),
+    path('nosotros/', nosotros, name="nosotros"),
 ]

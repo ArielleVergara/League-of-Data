@@ -22,8 +22,6 @@ class Graphic_data (models.Model):
     kills = models.IntegerField (verbose_name= 'asesinatos del jugador', default=None)
     deaths = models.IntegerField (verbose_name= 'muertes del jugador', default=None)
     assists = models.IntegerField (verbose_name= 'asistencias del jugador', default=None)
-    gold = models.IntegerField (verbose_name= 'oro del jugador', default=None)
-    damage = models.IntegerField (verbose_name= 'daño del jugador', default=None)
     championId = models.IntegerField (verbose_name= 'id del campeón', default=None)
     championName = models.CharField(max_length=255, default=None)
     goldEarned = models.IntegerField (verbose_name= 'oro ganado', default=None)

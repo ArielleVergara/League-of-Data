@@ -2,39 +2,16 @@ import requests
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 
 
-def get_summoner_puuid(summoner_name, tag, region, api_key):
+def get_account_info(summoner_name, summoner_tag, summoner_region, api_key):
     url_start = "https://"
     url_finish = ".api.riotgames.com/riot/account/v1/accounts/by-riot-id/"
-    api_url = f"{url_start}{region}{url_finish}{summoner_name}/{tag}?api_key={api_key}"
-    summoner_puuid = None
+    api_url = f"{url_start}{summoner_region}{url_finish}{summoner_name}/{summoner_tag}?api_key={api_key}"
+    account_info = None
 
     try:
         resp_summoner = requests.get(api_url)
         resp_summoner.raise_for_status()
-        summoner_info = resp_summoner.json()
-        summoner_puuid = summoner_info['puuid']
-    except HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
-    except ConnectionError as conn_err:
-        print(f"Connection error occurred: {conn_err}")
-    except Timeout as timeout_err:
-        print(f"Timeout error occurred: {timeout_err}")
-    except RequestException as req_err:
-        print(f"Request exception occurred: {req_err}")
-    return summoner_puuid
-
-def get_account_info (summoner_puuid, api_key):
-    url_start = "https://"
-    url_middle = "la2.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/"
-    url_finish = "?api_key="
-
-    api_url = f"{url_start}{url_middle}{summoner_puuid}{url_finish}{api_key}"
-    account_info = None
-
-    try:
-        resp_account = requests.get(api_url)
-        resp_account.raise_for_status()
-        account_info = resp_account.json()
+        account_info = resp_summoner.json()
     except HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")
     except ConnectionError as conn_err:
@@ -45,14 +22,49 @@ def get_account_info (summoner_puuid, api_key):
         print(f"Request exception occurred: {req_err}")
     return account_info
 
-def get_summoner_id (account_info):
-    summoner_id = account_info['id']
+def get_summoner_puuid(account_info):
+    summoner_puuid = account_info['puuid']
+    return summoner_puuid
+
+def get_summoner_name(account_info):
+    summoner_name = account_info['gameName']
+    return summoner_name
+
+def get_summoner_tag(account_info):
+    summoner_tag = account_info['tagLine']
+    return summoner_tag
+
+def get_summoner_info (summoner_puuid, api_key):
+    url_start = "https://"
+    url_middle = "la2.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/"
+    url_finish = "?api_key="
+
+    api_url = f"{url_start}{url_middle}{summoner_puuid}{url_finish}{api_key}"
+    summoner_info = None
+
+    try:
+        resp_summoner = requests.get(api_url)
+        resp_summoner.raise_for_status()
+        summoner_info = resp_summoner.json()
+    except HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+    except ConnectionError as conn_err:
+        print(f"Connection error occurred: {conn_err}")
+    except Timeout as timeout_err:
+        print(f"Timeout error occurred: {timeout_err}")
+    except RequestException as req_err:
+        print(f"Request exception occurred: {req_err}")
+    return summoner_info
+
+def get_summoner_id (summoner_info):
+    summoner_id = summoner_info['id']
     return summoner_id
 
 def get_list_ranked_info (summoner_id, api_key):
     url_start = "https://"
-    url_middle = "la2.api.riotgames.com/lol/league/v4/entries/by-summoner-id/"
+    url_middle = "la2.api.riotgames.com/lol/league/v4/entries/by-summoner/"
     url_finish = "?api_key="
+
 
     api_url = f"{url_start}{url_middle}{summoner_id}{url_finish}{api_key}"
 
@@ -205,7 +217,7 @@ def get_totalTimeSpentDead (summoner_data):
     return summoner_totalTimeSpentDead
 
 def get_unitsHealed (summoner_data):
-    summoner_unitsHealed = summoner_data['unitsHealed']
+    summoner_unitsHealed = summoner_data['totalUnitsHealed']
     return summoner_unitsHealed
 
 def get_visionScore (summoner_data):
@@ -213,7 +225,7 @@ def get_visionScore (summoner_data):
     return summoner_visionScore
 
 def get_wardKilled (summoner_data):
-    summoner_wardKilled = summoner_data['wardKilled']
+    summoner_wardKilled = summoner_data['wardsKilled']
     return summoner_wardKilled
 
 def get_role(summoner_data):
@@ -273,15 +285,15 @@ def get_spell1Cast(summoner_data):
     return summoner_spell1Casts
 
 def get_spell2Cast(summoner_data):
-    summoner_spell2Cast = summoner_data['spell2Cast']
+    summoner_spell2Cast = summoner_data['spell2Casts']
     return summoner_spell2Cast
 
 def get_spell3Cast(summoner_data):
-    summoner_spell3Cast = summoner_data['spell3Cast']
+    summoner_spell3Cast = summoner_data['spell3Casts']
     return summoner_spell3Cast
 
 def get_spell4Cast(summoner_data):
-    summoner_spell4Cast = summoner_data['spell4Cast']
+    summoner_spell4Cast = summoner_data['spell4Casts']
     return summoner_spell4Cast
 
 def get_timePlayed(summoner_data):

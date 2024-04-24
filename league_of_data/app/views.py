@@ -1,10 +1,10 @@
 from django.http import HttpResponse
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
-from .form import summoner_info
+from .form import summoner_form
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
-from .graphs.fn_data_api import (get_summoner_puuid, get_match_list, get_match_data, 
+from .graphs.fn_data_api import (get_summoner_puuid, get_summoner_info, get_summoner_id, get_account_info, get_match_list, get_match_data, 
     get_summoner_index, get_summoner_data, get_kills, get_assists, get_deaths, 
     get_championName, get_goldEarned, get_totalDamageDealt, get_totalDamageTaken, 
     get_role, get_lane, get_win)
@@ -12,31 +12,54 @@ from league_of_data import settings
 from django.http import JsonResponse
 from .services import save_summoner_matches_and_stats
 
-def get_home(request):
-  form = summoner_info()
-  return render(request, 'home.html', {'form': form})
+def buscarInvc(request):
+  form = summoner_form()
+  return render(request, 'buscarInvc.html', {'form': form})
 
-@csrf_exempt
-def get_summoner_info(request):
+def nosotros(request):
+    return render(request, 'nosotros.html')
+
+def home(request):
+    return render(request, 'home.html')
+
+def get_summoner(request):
     if request.method == "POST":
-        form = summoner_info(request.POST)
+        form = summoner_form(request.POST)
         if form.is_valid():
+            summoner_name = form.cleaned_data['summoner_name']
+            summoner_tag = form.cleaned_data['summoner_tag']
+            summoner_region = form.cleaned_data['summoner_region']
+            
+            request.session['summ_info'] = [summoner_name, summoner_tag, summoner_region]
+            
             return JsonResponse({'redirectUrl': '/data_visualization'})
         else:
             return JsonResponse(form.errors, status=400)
 
 def data_visualization(request):
     summ_info = request.session.get('summ_info', None)
+    
     if summ_info is None:
-        return redirect('get_home')
+        return redirect('home')
     
     summoner_name, summoner_tag, summoner_region = summ_info
+
     api_key = settings.RIOT_API_KEY
 
-    summoner_puuid = get_summoner_puuid(summoner_name, summoner_tag, summoner_region, api_key)
-    match_list = get_match_list(summoner_puuid, summoner_region, api_key)
-
     save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region, api_key)
+
+    """
+    summoner_info = get_summoner_info(summoner_puuid, api_key)
+    print(summoner_info)
+
+    summoner_id = get_summoner_id(summoner_info)"""
+
+    account_info = get_account_info(summoner_name, summoner_tag, summoner_region, api_key)
+    
+    summoner_puuid = get_summoner_puuid(account_info)
+    
+    match_list = get_match_list(summoner_puuid, summoner_region, api_key)
+    
 
     all_match_details = []
     if match_list:
