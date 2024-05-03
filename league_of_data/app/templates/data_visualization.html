@@ -18,6 +18,8 @@
         <li>Role: {{ match.role }}</li>
         <li>Lane: {{ match.lane }}</li>
         <li>Win: {{ match.win }}</li>
+        <button onclick="drawGraph({{ match.kills }}, {{ match.deaths }}, {{ match.assists }}, {{ match.goldEarned }}, {{ match.totalDamageDealt }}, {{ match.totalDamageTaken }}, 'graph{{ forloop.counter }}')">Show Performance Graph</button>
+        <div id="graph{{ forloop.counter }}" class="graph"></div>
         <hr>
     {% endfor %}
     </ul>
@@ -26,4 +28,35 @@
     {% endif %}
 
 </div>
+{% endblock %}
+{% block scripts %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.min.js"></script>
+<script>
+{% verbatim %}
+function drawGraph(kills, deaths, assists, goldEarned, totalDamageDealt, totalDamageTaken, elementId) {
+    var data = [kills, deaths, assists, goldEarned, totalDamageDealt, totalDamageTaken];
+    $('#' + elementId).sparkline(data, {
+        type: 'bar',
+        barColor: '#00bbef',
+        height: '300px',
+        barWidth: '150',
+        barSpacing: '5',
+        chartRangeMin: 1,
+        chartRangeMax: 30000,
+        tooltipFormat: '{{offset:offset}}: {{value}}',
+        tooltipValueLookups: {
+            'offset': {
+                0: 'Kills',
+                1: 'Deaths',
+                2: 'Assists',
+                3: 'Gold Earned',
+                4: 'Total Damage Dealt',
+                5: 'Total Damage Taken'
+            }
+        }
+    });
+}
+{% endverbatim %}
+</script>
 {% endblock %}
