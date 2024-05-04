@@ -18,7 +18,7 @@
         <li>Role: {{ match.role }}</li>
         <li>Lane: {{ match.lane }}</li>
         <li>Win: {{ match.win }}</li>
-        <button onclick="drawGraph({{ match.kills }}, {{ match.deaths }}, {{ match.assists }}, {{ match.goldEarned }}, {{ match.totalDamageDealt }}, {{ match.totalDamageTaken }}, 'graph{{ forloop.counter }}')">Show Performance Graph</button>
+        <button onclick="drawGraph({{ match.kills }}, {{ match.deaths }}, {{ match.assists }}, {{ match.goldEarned }}, {{ match.totalDamageDealt }}, {{ match.totalDamageTaken }}, 'graph{{ forloop.counter }}')">Mostrar Gráfico</button>
         <div id="graph{{ forloop.counter }}" class="graph"></div>
         <hr>
     {% endfor %}
