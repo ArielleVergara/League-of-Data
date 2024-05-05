@@ -12,7 +12,7 @@
 <body>
     <header>
                
-        <nav class="navbar navbar-expand-lg bg-dark">
+        <nav class="navbar navbar-expand-lg custom-nav">
             
             <a href="{% url 'home' %}" class="Logo">
                 <img src="{% static 'imgs/Logo.jpeg' %}" href="" width="100" height="100" >
@@ -52,11 +52,14 @@
     </div>    
 
 
-    <footer class="bg-dark text-light">
+    <footer class="text-light custom-nav">
         <div class="p-5 text-center">
             Contacto
             <br>
-            contacto@lod.cl
+            <p>contacto@lod.cl</p>
+            <p>Copyright &copy;{% now "Y" %} League of Data Team. 
+                Todos los Derechos Reservados
+            </p>
         </div>
         
 

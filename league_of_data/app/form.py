@@ -8,6 +8,6 @@ region_choices = {
 }
 
 class summoner_form(forms.Form):
-    summoner_name = forms.CharField(label='Summoner name', max_length=100)
-    summoner_tag = forms.CharField(label='Summoner tag', max_length=100)
-    summoner_region = forms.ChoiceField(label='Summoner Region', choices= region_choices)
+    summoner_name = forms.CharField(label='Nombre Invocador', max_length=100)
+    summoner_tag = forms.CharField(label='Tag Invocador', max_length=100)
+    summoner_region = forms.ChoiceField(label='Región', choices= region_choices)

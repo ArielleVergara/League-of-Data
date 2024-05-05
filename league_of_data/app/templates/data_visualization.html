@@ -7,17 +7,17 @@
         {% if match_data %}
     <ul>
     {% for match in match_data %}
-        <li>Match ID: {{ match.match_id }}</li>
-        <li>Champion: {{ match.championName }}</li>
-        <li>Kills: {{ match.kills }}</li>
-        <li>Assists: {{ match.assists }}</li>
-        <li>Deaths: {{ match.deaths }}</li>
-        <li>Gold Earned: {{ match.goldEarned }}</li>
-        <li>Total Damage Dealt: {{ match.totalDamageDealt }}</li>
-        <li>Total Damage Taken: {{ match.totalDamageTaken }}</li>
-        <li>Role: {{ match.role }}</li>
-        <li>Lane: {{ match.lane }}</li>
-        <li>Win: {{ match.win }}</li>
+        <li>ID de Partida: {{ match.match_id }}</li>
+        <li>Campeón: {{ match.championName }}</li>
+        <li>Asesinatos: {{ match.kills }}</li>
+        <li>Asistencias: {{ match.assists }}</li>
+        <li>Muertes: {{ match.deaths }}</li>
+        <li>Oro Total Obtenido: {{ match.goldEarned }}</li>
+        <li>Daño Total Infligido: {{ match.totalDamageDealt }}</li>
+        <li>Daño Total Recibido: {{ match.totalDamageTaken }}</li>
+        <li>Rol: {{ match.role }}</li>
+        <li>Linea: {{ match.lane }}</li>
+        <li>Ganada: {{ match.win }}</li>
         <button onclick="drawGraph({{ match.kills }}, {{ match.deaths }}, {{ match.assists }}, {{ match.goldEarned }}, {{ match.totalDamageDealt }}, {{ match.totalDamageTaken }}, 'graph{{ forloop.counter }}')">Mostrar Gráfico</button>
         <div id="graph{{ forloop.counter }}" class="graph"></div>
         <hr>
