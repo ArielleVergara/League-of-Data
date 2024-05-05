@@ -19,7 +19,7 @@
         <li>Linea: {{ match.lane }}</li>
         <li>Ganada: {{ match.win }}</li>
         <button onclick="drawGraph({{ match.kills }}, {{ match.deaths }}, {{ match.assists }}, {{ match.goldEarned }}, {{ match.totalDamageDealt }}, {{ match.totalDamageTaken }}, 'graph{{ forloop.counter }}')">Mostrar Gráfico</button>
-        <div id="graph{{ forloop.counter }}" class="graph"></div>
+        <canvas id="graph{{ forloop.counter }}" class="graph"></canvas>
         <hr>
     {% endfor %}
     </ul>
@@ -31,28 +31,60 @@
 {% endblock %}
 {% block scripts %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 {% verbatim %}
 function drawGraph(kills, deaths, assists, goldEarned, totalDamageDealt, totalDamageTaken, elementId) {
-    var data = [kills, deaths, assists, goldEarned, totalDamageDealt, totalDamageTaken];
-    $('#' + elementId).sparkline(data, {
+    var ctx = document.getElementById(elementId).getContext('2d');
+    var chart = new Chart(ctx, {
         type: 'bar',
-        barColor: '#00bbef',
-        height: '300px',
-        barWidth: '150',
-        barSpacing: '5',
-        chartRangeMin: 1,
-        chartRangeMax: 30000,
-        tooltipFormat: '{{offset:offset}}: {{value}}',
-        tooltipValueLookups: {
-            'offset': {
-                0: 'Kills',
-                1: 'Deaths',
-                2: 'Assists',
-                3: 'Gold Earned',
-                4: 'Total Damage Dealt',
-                5: 'Total Damage Taken'
+        data: {
+            labels: ['Asesinatos', 'Muertes', 'Asistencias', 'Oro Obtenido', 'Daño Total Infligido', 'Daño Total Recibido'],
+            datasets: [{
+                data: [kills, deaths, assists, goldEarned, totalDamageDealt, totalDamageTaken],
+                backgroundColor: [
+                    '#FFCD56',  // Amarillo
+                    '#FF6384',  // Rojo
+                    '#4BC0C0',  // Verde agua
+                    '#36A2EB',  // Azul
+                    '#9966FF',  // Púrpura
+                    '#FF9F40'   // Naranja
+                ],
+                borderColor: [
+                    '#FFCD56',  // Amarillo
+                    '#FF6384',  // Rojo
+                    '#4BC0C0',  // Verde agua
+                    '#36A2EB',  // Azul
+                    '#9966FF',  // Púrpura
+                    '#FF9F40'   // Naranja
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: {
+                        color: '#FFFFFF1A' // Color de la cuadrícula del eje Y en hexadecimal con opacidad
+                    },
+                    ticks: {
+                        color: '#FFFFFFB3' // Color de los números y ticks en el eje Y en hexadecimal con opacidad
+                    }
+                },
+                x: {
+                    grid: {
+                        color: '#FFFFFF1A' // Color de la cuadrícula del eje X en hexadecimal con opacidad
+                    },
+                    ticks: {
+                        color: '#FFFFFFB3' // Color de los números y ticks en el eje X en hexadecimal con opacidad
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false // Desactiva la leyenda completamente
+                }
             }
         }
     });
