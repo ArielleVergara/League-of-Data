@@ -308,7 +308,7 @@ def get_time_info(id_match, api_key, summoner_region):
     api_start = "https://"
     api_middle = ".api.riotgames.com/lol/match/v5/matches/"
     api_finish = "/timeline?api_key="
-    api_url = api_start + summoner_region + api_middle + id_match + api_finish + api_key
+    api_url = f"{api_start}{summoner_region}{api_middle}{id_match}{api_finish}{api_key}"
 
     time_info = []
 
@@ -332,19 +332,3 @@ def get_match_minutes(time_info):
     minutes = len(time_info)
     return minutes
 
-def get_summoner_time_info(minutes, summoner_index, time_info):
-    summoner_position = f"{summoner_index + 1}"
-    time_damageDone = 0
-    time_damageTaken = 0
-    time_level = 0
-    time_minions = 0
-    time_gold = 0
-    time_xp = 0
-    for i in minutes - 1:
-        summoner_time_info = time_info[i]['participantFrame'][summoner_position]
-        time_damageDone = summoner_time_info['damageStats']['totalDamageDoneToChampions']
-        time_damageTaken = summoner_time_info['damageStats']['totalDamageTaken']
-        time_level = summoner_time_info['level']
-        time_minions = summoner_time_info['minionsKilled']
-        time_gold = summoner_time_info['totalGold']
-        time_xp = summoner_time_info['xp']

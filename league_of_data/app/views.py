@@ -4,13 +4,11 @@ from django.views.decorators.csrf import csrf_exempt
 from .form import summoner_form
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
-from .graphs.fn_data_api import (get_summoner_puuid, get_summoner_info, get_summoner_id, get_account_info, get_match_list, get_match_data, 
-    get_summoner_index, get_summoner_data, get_kills, get_assists, get_deaths, 
-    get_championName, get_goldEarned, get_totalDamageDealt, get_totalDamageTaken, 
-    get_role, get_lane, get_win)
 from league_of_data import settings
 from django.http import JsonResponse
 from .services import save_summoner_matches_and_stats
+from .models import Summoner, Time_info, Match, Graphic_data
+from .graphs.graphs_detail import generate_graphs
 
 def buscarInvc(request):
   form = summoner_form()
@@ -48,44 +46,78 @@ def data_visualization(request):
 
     save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region, api_key)
 
-    """
-    summoner_info = get_summoner_info(summoner_puuid, api_key)
-    print(summoner_info)
+    try:
+        summoner = Summoner.objects.get(summoner_name=summoner_name, summoner_tag=summoner_tag, region=summoner_region)
+    except Summoner.DoesNotExist:
+        return redirect('home')
 
-    summoner_id = get_summoner_id(summoner_info)"""
-
-    account_info = get_account_info(summoner_name, summoner_tag, summoner_region, api_key)
-    
-    summoner_puuid = get_summoner_puuid(account_info)
-    
-    match_list = get_match_list(summoner_puuid, summoner_region, api_key)
-    
-
+    matches = Match.objects.filter(summoner_id=summoner)
     all_match_details = []
-    if match_list:
-        for match_id in match_list[:5]:
-            match_data = get_match_data([match_id], summoner_region, api_key)
-            for match in match_data:
-                summoner_index = get_summoner_index(match, summoner_puuid)
-                summoner_data = get_summoner_data(match, summoner_index)
-                
-                match_details = {
-                    'match_id': match_id,
-                    'championName': get_championName(summoner_data),
-                    'kills': get_kills(summoner_data),
-                    'assists': get_assists(summoner_data),
-                    'deaths': get_deaths(summoner_data),
-                    'goldEarned': get_goldEarned(summoner_data),
-                    'totalDamageDealt': get_totalDamageDealt(summoner_data),
-                    'totalDamageTaken': get_totalDamageTaken(summoner_data),
-                    'role': get_role(summoner_data),
-                    'lane': get_lane(summoner_data),
-                    'win': get_win(summoner_data)
-                }
-                all_match_details.append(match_details)
+    
+    for match in matches:
+        graphic_data = Graphic_data.objects.filter(match_id=match)
+        for data in graphic_data:  
+            match_details = {
+                'match_id': match.api_match_id,
+                'championName': data.championName,
+                'kills': data.kills,
+                'assists': data.assists,
+                'deaths': data.deaths,
+                'goldEarned': data.goldEarned,
+                'totalDamageDealt': data.totalDamageDealt,
+                'totalDamageTaken': data.totalDamageTaken,
+                'role': data.role,
+                'lane': data.lane,
+                'win': data.win,
+                'goldSpent': data.goldSpent,
+                'totalHeal': data.totalHeal,
+                'totalHealOnTeammates': data.totalHealsOnTeammates,
+                'totalMinionsKilled': data.totalMinionsKilled,
+                'totalTimeSpentDead': data.totalTimeSpentDead,
+                'visionScore': data.visionScore,
+                'wardKilled': data.wardKilled,
+                'wardPlaced': data.wardPlaced,
+                'doubleKills': data.doubleKills,
+                'tripleKills': data.tripleKills,
+                'firstBloodAssist': data.firstBloodAssist,
+                'firstBloodKill': data.firstBloodKill,
+                'timePlayed': data.timePlayed,
+                'killingSprees': data.killingSprees,
+                'individualPosition': data.individualPosition,
+                'gameEndedInEarlySurrender': data.gameEndedInEarlySurrender,
+                'gameEndedInSurrender': data.gameEndedInSurrender
+            }
+            all_match_details.append(match_details)
 
+            all_time_info = []
+        
+            time_info = Time_info.objects.filter(match_id = match)
+            for time_data in time_info:
+                time_details = {
+                    'minute': time_data.minute,
+                    'damageDone': time_data.damageDone,
+                    'damageTaken': time_data.damageTaken,
+                    'gold': time_data.gold,
+                    'xp': time_data.xp,
+                    'minions': time_data.minions,
+                    'level': time_data.level
+                }
+                all_time_info.append(time_details)
+            generate_graphs()
+    
+    total_wins = summoner.total_wins
+    total_losses = summoner.total_losses
+    winrate = (total_wins / (total_wins + total_losses)) * 100 if (total_wins + total_losses) > 0 else 0
+    
     context = {
         'match_data': all_match_details,
-        'summoner_name': summoner_name
+        'summoner': summoner,
+        'time_info': all_time_info,
+        'total_wins': total_wins,
+        'total_losses': total_losses,
+        'winrate': winrate,
+        'rank': summoner.rank,
+        'tier': summoner.tier,
+        'graph_path': 'static/graphs/damage_graph.png'
     }
     return render(request, 'data_visualization.html', context)

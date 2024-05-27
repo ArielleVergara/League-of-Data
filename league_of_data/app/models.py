@@ -41,8 +41,8 @@ class Graphic_data (models.Model):
     participantId = models.IntegerField (verbose_name= 'id del participante', default=None)
     doubleKills = models.IntegerField (verbose_name= 'doble kills', default=None)
     tripleKills = models.IntegerField (verbose_name= 'triple kills', default=None)
-    firstBloodAssist = models.IntegerField (verbose_name= 'asistencia de primer asesinato', default=None)
-    firstBloodKill = models.IntegerField (verbose_name= 'primer asesinato', default=None)
+    firstBloodAssist = models.BooleanField (verbose_name= 'asistencia de primer asesinato', default=None)
+    firstBloodKill = models.BooleanField (verbose_name= 'primer asesinato', default=None)
     win = models.BooleanField (verbose_name= 'victoria', default=None)
     timePlayed = models.IntegerField (verbose_name= 'tiempo jugado', default=None)
     spell1Casts = models.IntegerField (verbose_name= 'primer hechizo', default=None)
@@ -54,4 +54,14 @@ class Graphic_data (models.Model):
     individualPosition = models.CharField(max_length=255, default=None)
     gameEndedInEarlySurrender = models.BooleanField (verbose_name= 'juego con rendición temprana', default=None)
     gameEndedInSurrender = models.BooleanField (verbose_name= 'juego con rendición', default=None)
+
+class Time_info (models.Model):
+    match_id = models.ForeignKey(Match, on_delete=models.CASCADE)
+    minute = models.IntegerField(verbose_name='minuto de la partida', default=None)
+    damageDone = models.IntegerField(verbose_name= 'daño hecho', default=None)
+    damageTaken = models.IntegerField(verbose_name= 'daño tomado', default=None)
+    gold = models.IntegerField(verbose_name= 'oro', default=None)
+    xp = models.IntegerField(verbose_name= 'xp', default=None)
+    minions = models.IntegerField(verbose_name= 'farm', default=None)
+    level = models.IntegerField(verbose_name= 'nivel', default=None)
 

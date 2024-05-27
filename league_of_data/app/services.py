@@ -1,5 +1,5 @@
 from django.db import transaction
-from .models import Summoner, Match, Graphic_data
+from .models import Summoner, Match, Graphic_data, Time_info
 from .graphs.fn_data_api import (
     get_summoner_puuid, get_account_info, get_summoner_name, get_summoner_info, get_summoner_tag, get_list_ranked_info, get_ranked_info,
     get_match_list, get_match_data, get_summoner_index, get_summoner_data,
@@ -9,7 +9,7 @@ from .graphs.fn_data_api import (
     get_totalTimeSpentDead, get_unitsHealed, get_visionScore, get_spell1Cast, get_spell2Cast, get_spell3Cast, get_spell4Cast,
     get_doubleKills, get_tripleKills, get_firstBloodAssist, get_firstBloodKill, get_individualPosition, 
     get_gameEndedInEarlySurrender, get_gameEndedInSurrender, get_wardKilled, get_wardsPlaced, get_role, get_lane, 
-    get_participantId, get_win, get_timePlayed, get_killingSprees, get_longestTimeSpentLiving
+    get_participantId, get_win, get_timePlayed, get_killingSprees, get_longestTimeSpentLiving, get_match_minutes, get_time_info,
 )
 from django.core.exceptions import ValidationError
 
@@ -52,6 +52,19 @@ def validate_match_data(mtch_info):
         if field == 'participantId' and mtch_info[field] < 0:
             raise ValidationError("Invalid participant ID.")
 
+def validate_time_info(time_info):
+    required_fields = ['xp', 'gold', 'level', 'minions', 'damageTaken', 'damageDone', 'minuto']
+
+    if not time_info:
+        raise ValidationError("Time info is missing.")
+    
+    for field in required_fields:
+        if field not in time_info:
+            raise ValidationError(f"Missing required match field: {field}")
+    if not time_info[field]:
+            raise ValidationError(f"Empty value for required time_info field: {field}")
+            
+    
 
 def save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region, api_key):
 
@@ -150,6 +163,7 @@ def save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region
             }
         )
 
+
         for match_id in match_list[:5]:
             match_data = get_match_data([match_id], summoner_region, api_key)
             if not match_data:
@@ -160,7 +174,6 @@ def save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region
                 summoner_index = get_summoner_index(match, summoner_puuid)
                 
                 summoner_data = get_summoner_data(match, summoner_index)
-                print(summoner_data)
 
                 kills = get_kills(summoner_data)
                 deaths = get_deaths(summoner_data)
@@ -283,6 +296,68 @@ def save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region
                         'killingSprees': get_killingSprees(summoner_data),
                         'individualPosition': get_individualPosition(summoner_data),
                         'gameEndedInEarlySurrender': get_gameEndedInEarlySurrender(summoner_data),
-                        'gameEndedInSurrender': get_gameEndedInSurrender(summoner_data),
+                        'gameEndedInSurrender': get_gameEndedInSurrender(summoner_data)
                     }
                 )
+                print(match_id)
+                print(api_key)
+                time_info = get_time_info(match_id, api_key, summoner_region,)
+                if not time_info:
+                    print(f"No time data found for match ID {match_id}")
+                    continue
+
+                minutes = get_match_minutes(time_info)
+                minutes_list = range(minutes)
+                summoner_position = f"{summoner_index + 1}"
+                time_damageDone = 0
+                time_damageTaken = 0
+                time_level = 0
+                time_minions = 0
+                time_gold = 0
+                time_xp = 0
+                min = 0
+
+                for i in minutes_list:
+                    summoner_time_info = time_info[i]['participantFrames'][summoner_position]
+                    min = i+1
+                    time_damageDone = summoner_time_info['damageStats']['totalDamageDoneToChampions']
+                    time_damageTaken = summoner_time_info['damageStats']['totalDamageTaken']
+                    time_level = summoner_time_info['level']
+                    time_minions = summoner_time_info['minionsKilled']
+                    time_gold = summoner_time_info['totalGold']
+                    time_xp = summoner_time_info['xp']
+
+                    tm_info = {
+                        'minuto': min,
+                        'damageDone': time_damageDone,
+                        'damageTaken': time_damageTaken,
+                        'level': time_level,
+                        'minions': time_minions,
+                        'gold': time_gold,
+                        'xp': time_xp
+                    }
+                    validate_time_info(tm_info)
+
+                    time_info_instance, _ = Time_info.objects.update_or_create(
+                    match_id = match_instance,
+                    minute = min,
+                    defaults={
+                        'damageDone': time_damageDone,
+                        'damageTaken': time_damageTaken,
+                        'gold': time_gold,
+                        'xp': time_xp,
+                        'minions': time_minions,
+                        'level': time_level
+                    }
+                )
+
+
+    
+    
+   
+    
+
+        
+
+        
+        

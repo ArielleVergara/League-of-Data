@@ -3,8 +3,13 @@
 {% block contenido %}
 <div class="p-5 text-light">
 
-    <h2>Match Data for {{ summoner_name }}</h2>
-        {% if match_data %}
+    <h2>Match Data for {{ summoner.summoner_name }}</h2>
+    <p>Total Wins: {{ total_wins }}</p>
+    <p>Total Losses: {{ total_losses }}</p>
+    <p>Winrate: {{ winrate }}%</p>
+    <p>Elo: {{ tier }} {{ rank }}</p>
+
+    {% if match_data %}
     <ul>
     {% for match in match_data %}
         <li>ID de Partida: {{ match.match_id }}</li>
@@ -18,77 +23,29 @@
         <li>Rol: {{ match.role }}</li>
         <li>Linea: {{ match.lane }}</li>
         <li>Ganada: {{ match.win }}</li>
-        <button onclick="drawGraph({{ match.kills }}, {{ match.deaths }}, {{ match.assists }}, {{ match.goldEarned }}, {{ match.totalDamageDealt }}, {{ match.totalDamageTaken }}, 'graph{{ forloop.counter }}')">Mostrar Gráfico</button>
-        <canvas id="graph{{ forloop.counter }}" class="graph"></canvas>
         <hr>
+        <h3>Time Info</h3>
+        <ul>
+        {% for time in match.time_info %}
+            {% if time.match_id == match.match_id %}
+            <li>Minuto: {{ time.minute }}</li>
+            <li>Daño Hecho: {{ time.damageDone }}</li>
+            <li>Daño Recibido: {{ time.damageTaken }}</li>
+            <li>Oro: {{ time.gold }}</li>
+            <li>XP: {{ time.xp }}</li>
+            <li>Minions: {{ time.minions }}</li>
+            <li>Nivel: {{ time.level }}</li>
+            <hr>
+            {% endif %}
+        {% endfor %}
+        </ul>
     {% endfor %}
     </ul>
     {% else %}
     <p>No match data available.</p>
     {% endif %}
-
+    <h3>Gráficos</h3>
+    <img src="{{ graph_path }}" alt="Gráfico de Daño Hecho y Recibido por Minuto">
 </div>
 {% endblock %}
-{% block scripts %}
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-{% verbatim %}
-function drawGraph(kills, deaths, assists, goldEarned, totalDamageDealt, totalDamageTaken, elementId) {
-    var ctx = document.getElementById(elementId).getContext('2d');
-    var chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Asesinatos', 'Muertes', 'Asistencias', 'Oro Obtenido', 'Daño Total Infligido', 'Daño Total Recibido'],
-            datasets: [{
-                data: [kills, deaths, assists, goldEarned, totalDamageDealt, totalDamageTaken],
-                backgroundColor: [
-                    '#FFCD56',  // Amarillo
-                    '#FF6384',  // Rojo
-                    '#4BC0C0',  // Verde agua
-                    '#36A2EB',  // Azul
-                    '#9966FF',  // Púrpura
-                    '#FF9F40'   // Naranja
-                ],
-                borderColor: [
-                    '#FFCD56',  // Amarillo
-                    '#FF6384',  // Rojo
-                    '#4BC0C0',  // Verde agua
-                    '#36A2EB',  // Azul
-                    '#9966FF',  // Púrpura
-                    '#FF9F40'   // Naranja
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: false,
-                    grid: {
-                        color: '#FFFFFF1A' // Color de la cuadrícula del eje Y en hexadecimal con opacidad
-                    },
-                    ticks: {
-                        color: '#FFFFFFB3' // Color de los números y ticks en el eje Y en hexadecimal con opacidad
-                    }
-                },
-                x: {
-                    grid: {
-                        color: '#FFFFFF1A' // Color de la cuadrícula del eje X en hexadecimal con opacidad
-                    },
-                    ticks: {
-                        color: '#FFFFFFB3' // Color de los números y ticks en el eje X en hexadecimal con opacidad
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false // Desactiva la leyenda completamente
-                }
-            }
-        }
-    });
-}
-{% endverbatim %}
-</script>
-{% endblock %}
+
