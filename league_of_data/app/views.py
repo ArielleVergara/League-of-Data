@@ -8,7 +8,7 @@ from league_of_data import settings
 from django.http import JsonResponse
 from .services import save_summoner_matches_and_stats
 from .models import Summoner, Time_info, Match, Graphic_data
-from .graphs.graphs_detail import generate_graphs
+from .graphs_code.graphs_detail import generate_graphs
 
 def buscarInvc(request):
   form = summoner_form()
@@ -108,7 +108,7 @@ def data_visualization(request):
     total_wins = summoner.total_wins
     total_losses = summoner.total_losses
     winrate = (total_wins / (total_wins + total_losses)) * 100 if (total_wins + total_losses) > 0 else 0
-    
+
     context = {
         'match_data': all_match_details,
         'summoner': summoner,

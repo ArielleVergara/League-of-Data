@@ -1,6 +1,6 @@
 from django.db import transaction
 from .models import Summoner, Match, Graphic_data, Time_info
-from .graphs.fn_data_api import (
+from .graphs_code.fn_data_api import (
     get_summoner_puuid, get_account_info, get_summoner_name, get_summoner_info, get_summoner_tag, get_list_ranked_info, get_ranked_info,
     get_match_list, get_match_data, get_summoner_index, get_summoner_data,
     get_summoner_id, get_league_points, get_total_wins, get_total_losses, get_rank, get_tier,
