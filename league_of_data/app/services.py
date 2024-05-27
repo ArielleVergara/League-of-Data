@@ -299,8 +299,7 @@ def save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region
                         'gameEndedInSurrender': get_gameEndedInSurrender(summoner_data)
                     }
                 )
-                print(match_id)
-                print(api_key)
+                
                 time_info = get_time_info(match_id, api_key, summoner_region,)
                 if not time_info:
                     print(f"No time data found for match ID {match_id}")

@@ -1,3 +1,4 @@
+"""
 import matplotlib
 matplotlib.use('Agg')  # Usa el backend 'Agg' para evitar problemas de GUI
 import pandas as pd
@@ -48,3 +49,4 @@ def generate_graphs():
         plt.close()
     except Exception as e:
         print(f"Error al generar el gráfico: {e}")
+        """

@@ -4,11 +4,11 @@
 <div class="p-5 text-light">
 
     <h2>Match Data for {{ summoner.summoner_name }}</h2>
+    <p>Elo: {{ tier }} {{ rank }}</p>
     <p>Total Wins: {{ total_wins }}</p>
     <p>Total Losses: {{ total_losses }}</p>
     <p>Winrate: {{ winrate }}%</p>
-    <p>Elo: {{ tier }} {{ rank }}</p>
-
+    
     {% if match_data %}
     <ul>
     {% for match in match_data %}
@@ -26,17 +26,17 @@
         <hr>
         <h3>Time Info</h3>
         <ul>
-        {% for time in match.time_info %}
+        {% for time in time_info %}
             {% if time.match_id == match.match_id %}
             <li>Minuto: {{ time.minute }}</li>
-            <li>Daño Hecho: {{ time.damageDone }}</li>
-            <li>Daño Recibido: {{ time.damageTaken }}</li>
+            <div class="bar" style="width: {{ time.damageDone }}px; background-color: blue;"></div>
+            <div class="bar" style="width: {{ time.damageTaken }}px; background-color: red;"></div>
             <li>Oro: {{ time.gold }}</li>
             <li>XP: {{ time.xp }}</li>
             <li>Minions: {{ time.minions }}</li>
             <li>Nivel: {{ time.level }}</li>
             <hr>
-            {% endif %}
+           {% endif %}
         {% endfor %}
         </ul>
     {% endfor %}
@@ -44,8 +44,6 @@
     {% else %}
     <p>No match data available.</p>
     {% endif %}
-    <h3>Gráficos</h3>
-    <img src="{{ graph_path }}" alt="Gráfico de Daño Hecho y Recibido por Minuto">
 </div>
 {% endblock %}
 

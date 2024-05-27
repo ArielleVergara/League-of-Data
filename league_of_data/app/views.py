@@ -8,7 +8,6 @@ from league_of_data import settings
 from django.http import JsonResponse
 from .services import save_summoner_matches_and_stats
 from .models import Summoner, Time_info, Match, Graphic_data
-from .graphs_code.graphs_detail import generate_graphs
 
 def buscarInvc(request):
   form = summoner_form()
@@ -94,6 +93,7 @@ def data_visualization(request):
             time_info = Time_info.objects.filter(match_id = match)
             for time_data in time_info:
                 time_details = {
+                    'match_id': time_data.match_id,
                     'minute': time_data.minute,
                     'damageDone': time_data.damageDone,
                     'damageTaken': time_data.damageTaken,
@@ -103,12 +103,12 @@ def data_visualization(request):
                     'level': time_data.level
                 }
                 all_time_info.append(time_details)
-            generate_graphs()
-    
+
+
     total_wins = summoner.total_wins
     total_losses = summoner.total_losses
     winrate = (total_wins / (total_wins + total_losses)) * 100 if (total_wins + total_losses) > 0 else 0
-
+    
     context = {
         'match_data': all_match_details,
         'summoner': summoner,
@@ -118,6 +118,5 @@ def data_visualization(request):
         'winrate': winrate,
         'rank': summoner.rank,
         'tier': summoner.tier,
-        'graph_path': 'static/graphs/damage_graph.png'
     }
     return render(request, 'data_visualization.html', context)
