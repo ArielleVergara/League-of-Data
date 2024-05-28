@@ -13,6 +13,7 @@ from .graphs_code.fn_data_api import (
 )
 from django.core.exceptions import ValidationError
 
+
 def validate_summoner_data(summ_info):
 
 
@@ -336,6 +337,7 @@ def save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region
                         'xp': time_xp
                     }
                     validate_time_info(tm_info)
+
 
                     time_info_instance, _ = Time_info.objects.update_or_create(
                     match_id = match_instance,

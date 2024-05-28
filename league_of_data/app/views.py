@@ -8,6 +8,7 @@ from league_of_data import settings
 from django.http import JsonResponse
 from .services import save_summoner_matches_and_stats
 from .models import Summoner, Time_info, Match, Graphic_data
+from .graphs_code.graphs_detail import generate_graphs
 
 def buscarInvc(request):
   form = summoner_form()
@@ -103,6 +104,8 @@ def data_visualization(request):
                     'level': time_data.level
                 }
                 all_time_info.append(time_details)
+            
+        generate_graphs(match)
 
 
     total_wins = summoner.total_wins
