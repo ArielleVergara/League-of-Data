@@ -107,7 +107,7 @@ def data_visualization(request):
             
         generate_graphs(match)
 
-
+    
     total_wins = summoner.total_wins
     total_losses = summoner.total_losses
     winrate = (total_wins / (total_wins + total_losses)) * 100 if (total_wins + total_losses) > 0 else 0
