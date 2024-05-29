@@ -11,15 +11,17 @@ from app.models import Time_info
 
 def generate_graphs(match):
     try:
-        # Paso 1: Consulta los datos desde la base de datos
-        time_info_data = Time_info.objects.filter(match_id = match)
+        # Paso 1: Consulta los datos desde la base de 
+        time_info_data = Time_info.objects.filter(match_id = match).values()
         """print('time_info_data', time_info_data)"""
+        """for i in time_info_data:
+            print(i)"""
         # Paso 2: Convierte los datos a un DataFrame de pandas
         df = pd.DataFrame(time_info_data)
         """print(df)"""
-
-        min = df['minute']
-        print('min', min)
+            
+        min = df.loc[:,['minute']]
+        """print('min', min)"""
 
         # Paso 4: Crea gráficos con matplotlib
         plt.figure(figsize=(10, 6))
@@ -32,7 +34,7 @@ def generate_graphs(match):
         plt.title('Daño Hecho por Minuto')
         plt.legend()
         plt.grid()
-        plt.savefig("plot.png")
+        plt.savefig(f"./app/static/graphs/{match}.png")
 
     except Exception as e:
         print(f"Error al generar el gráfico: {e}")
