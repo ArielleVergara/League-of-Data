@@ -11,13 +11,18 @@ from app.models import Time_info
 
 def generate_graphs(match):
     try:
-        # Paso 1: Consulta los datos desde la base de 
+        
         time_info_data = Time_info.objects.filter(match_id = match).values()
         # Paso 2: Convierte los datos a un DataFrame de pandas
+        match_id = (time_info_data[0]['match_id_id'])
+
+        """if not os.path.exists(f"./app/static/graphs/match_{match_id}/damage_{match_id}.png"):
+                os.makedirs(f"./app/static/graphs/match_{match_id}/damage_{match_id}.png")"""
+        
         df = pd.DataFrame(time_info_data)
         try: 
             # Paso 4: Crea gráficos con matplotlib
-            plt.figure(figsize=(10, 6))
+            plt_daño = plt.figure(figsize=(10, 6))
 
             # Ejemplo: Gráfico de daño hecho por minuto
             plt.plot(df['minute'], df['damageDone'], color="g", label='Daño Hecho')
@@ -27,15 +32,15 @@ def generate_graphs(match):
             plt.ylabel('Daño')
             plt.title('Daño Hecho por Minuto')
             plt.legend()
-            plt.grid()
-            plt.savefig(f"./app/static/graphs/daño/{match}.png")
+            plt.grid()          
+            """plt.savefig(f"./app/static/graphs/match_{match_id}/damage_{match_id}.png")"""
             matplotlib.pyplot.close()
         except:
-            print("No se pudo generar el gráfico de Daño Hecho")
+            print("No se pudo generar el gráfico de Daño")
 
         try: 
             # Paso 4: Crea gráficos con matplotlib
-            plt.figure(figsize=(10, 6))
+            plt_nivel = plt.figure(figsize=(10, 6))
 
             # Ejemplo: Gráfico de daño hecho por minuto
             plt.plot(df['minute'], df['level'], color="g", label='Nivel')
@@ -44,14 +49,14 @@ def generate_graphs(match):
             plt.ylabel('Nivel de campeón')
             plt.title('Nivel de campeón al minuto')
             plt.grid()
-            plt.savefig(f"./app/static/graphs/level/{match}.png")
+            """plt.savefig(f"./app/static/graphs/match_{match_id}/level_{match_id}.png")"""
             matplotlib.pyplot.close()
         except:
             print("No se pudo generar el gráfico de Nivel")
 
         try: 
             # Paso 4: Crea gráficos con matplotlib
-            plt.figure(figsize=(10, 6))
+            plt_minions = plt.figure(figsize=(10, 6))
 
             # Ejemplo: Gráfico de daño hecho por minuto
             plt.plot(df['minute'], df['minions'], color="r", label='Minions')
@@ -60,14 +65,14 @@ def generate_graphs(match):
             plt.ylabel('Minions')
             plt.title('Minions al minuto')
             plt.grid()
-            plt.savefig(f"./app/static/graphs/minions/{match}.png")
+            """plt.savefig(f"./app/static/graphs/match_{match_id}/minions_{match_id}.png")"""
             matplotlib.pyplot.close()
         except:
             print("No se pudo generar el gráfico de Minions")   
 
         try: 
             # Paso 4: Crea gráficos con matplotlib
-            plt.figure(figsize=(10, 6))
+            plt_oro = plt.figure(figsize=(10, 6))
 
             # Ejemplo: Gráfico de daño hecho por minuto
             plt.plot(df['minute'], df['gold'], color="r", label='Oro')
@@ -76,14 +81,14 @@ def generate_graphs(match):
             plt.ylabel('Oro')
             plt.title('Oro al minuto')
             plt.grid()
-            plt.savefig(f"./app/static/graphs/oro/{match}.png")
+            """plt.savefig(f"./app/static/graphs/match_{match_id}/gold_{match_id}.png")"""
             matplotlib.pyplot.close()
         except:
             print("No se pudo generar el gráfico de Oro")
 
         try: 
             # Paso 4: Crea gráficos con matplotlib
-            plt.figure(figsize=(10, 6))
+            plt_exp = plt.figure(figsize=(10, 6))
 
             # Ejemplo: Gráfico de daño hecho por minuto
             plt.plot(df['minute'], df['xp'], color="r", label='Experiencia')
@@ -92,7 +97,7 @@ def generate_graphs(match):
             plt.ylabel('Experiencia')
             plt.title('Experiencia')
             plt.grid()
-            plt.savefig(f"./app/static/graphs/xp/{match}.png")
+            """plt.savefig(f"./app/static/graphs/match_{match_id}/xp_{match_id}.png")"""
             matplotlib.pyplot.close()
         except:
             print("No se pudo generar el gráfico de Experiencia")   
@@ -100,4 +105,5 @@ def generate_graphs(match):
     except:
         print(f"No hay datos en time_info_data")
     
+    return plt_daño, plt_exp, plt_minions, plt_nivel, plt_oro
     

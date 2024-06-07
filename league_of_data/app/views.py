@@ -106,7 +106,8 @@ def data_visualization(request):
                 all_time_info.append(time_details)
             
         generate_graphs(match)
-
+        
+    
     
     total_wins = summoner.total_wins
     total_losses = summoner.total_losses
@@ -121,5 +122,6 @@ def data_visualization(request):
         'winrate': winrate,
         'rank': summoner.rank,
         'tier': summoner.tier,
+        
     }
     return render(request, 'data_visualization.html', context)
