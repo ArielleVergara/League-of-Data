@@ -11,54 +11,45 @@
         <p>División/Rango: {{ tier }} {{ rank }}</p>
         <p>Total Partidas Ganadas: {{ total_wins }}</p>
         <p>Total Partidas Perdidas: {{ total_losses }}</p>
-        <p>Ratio de Victorias: {{ winrate }}%</p>
+        <p>Ratio de Victorias: {{ winrate|floatformat:1 }}%</p>
     </div>
     <br><br>
     {% if match_data %}
-    <div class="row">
-        <div class="col-md-6">
-            <h5 class="text-center">-Ultimas Partidas-</h5>
-            <ul>
-                {% for match in match_data %}
-                <p>Detalles Partida</p>
-                    <li>ID de Partida: {{ match.match_id }}</li>
-                    <li>Campeón: {{ match.championName }}</li>
-                    <li>Asesinatos: {{ match.kills }}</li>
-                    <li>Asistencias: {{ match.assists }}</li>
-                    <li>Muertes: {{ match.deaths }}</li>
-                    <li>Oro Total Obtenido: {{ match.goldEarned }}</li>
-                    <li>Daño Total Infligido: {{ match.totalDamageDealt }}</li>
-                    <li>Daño Total Recibido: {{ match.totalDamageTaken }}</li>
-                    <li>Rol: {{ match.role }}</li>
-                    <li>Linea: {{ match.lane }}</li>
-                    <li>Ganada: {{ match.win }}</li>
-                    <hr>
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="col-md-6">
-            {% for match in match_data %}
-                {% with match_id=match.match_id %}
-                    <p>Gráficos Generados</p>
-                    <div>
-                        <img src="{% url 'plot_image' match_id=match.match_id graph_type='dano' %}" alt="Gráfico de Daño">
-                        <img src="{% url 'plot_image' match_id=match.match_id graph_type='exp' %}" alt="Gráfico de Experiencia">
-                        <img src="{% url 'plot_image' match_id=match.match_id graph_type='minions' %}" alt="Gráfico de Minions">
-                        <img src="{% url 'plot_image' match_id=match.match_id graph_type='nivel' %}" alt="Gráfico de Nivel">
-                        <img src="{% url 'plot_image' match_id=match.match_id graph_type='oro' %}" alt="Gráfico de Oro">
-                    </div>
+    <div class="accordion" id="matchAccordion">
+        {% for match in match_data %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ match.match_id }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ match.match_id }}" aria-expanded="false" aria-controls="collapse{{ match.match_id }}">
+                    Detalles Partida
+                </button>
+            </h2>
+            <div id="collapse{{ match.match_id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ match.match_id }}" data-bs-parent="#matchAccordion">
+                <div class="accordion-body">
+                    <strong>Detalles de la Partida:</strong>
                     <ul>
-                    {% for time in match.time_info %}
-                        <li>Minuto: {{ time.minute }}</li>
-                        <li>Oro: {{ time.gold }}</li>
-                        <li>XP: {{ time.xp }}</li>
-                        <li>Minions: {{ time.minions }}</li>
-                        <li>Nivel: {{ time.level }}</li>
-                    {% endfor %}
+                        <li>ID de Partida: {{ match.match_id }}</li>
+                        <li>Campeón: {{ match.championName }}</li>
+                        <li>Asesinatos: {{ match.kills }}</li>
+                        <li>Asistencias: {{ match.assists }}</li>
+                        <li>Muertes: {{ match.deaths }}</li>
+                        <li>Oro Total Obtenido: {{ match.goldEarned }}</li>
+                        <li>Daño Total Infligido: {{ match.totalDamageDealt }}</li>
+                        <li>Daño Total Recibido: {{ match.totalDamageTaken }}</li>
+                        <li>Rol: {{ match.role }}</li>
+                        <li>Linea: {{ match.lane }}</li>
+                        <li>Ganada: {{ match.win }}</li>
                     </ul>
-                {% endwith %}
-            {% endfor %}
+                    <div>
+                        <img class="graph-img" src="{% url 'plot_image' match_id=match.match_id graph_type='dano' %}" alt="Gráfico de Daño">
+                        <img class="graph-img" src="{% url 'plot_image' match_id=match.match_id graph_type='exp' %}" alt="Gráfico de Experiencia">
+                        <img class="graph-img" src="{% url 'plot_image' match_id=match.match_id graph_type='minions' %}" alt="Gráfico de Minions">
+                        <img class="graph-img" src="{% url 'plot_image' match_id=match.match_id graph_type='nivel' %}" alt="Gráfico de Nivel">
+                        <img class="graph-img" src="{% url 'plot_image' match_id=match.match_id graph_type='oro' %}" alt="Gráfico de Oro">
+                    </div>
+                </div>
+            </div>
         </div>
+        {% endfor %}
     </div>
     {% else %}
         <p>No match data available.</p>

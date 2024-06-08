@@ -68,3 +68,8 @@ body::before {
     margin-right: auto;
 }
 
+.graph-img {
+    width: 60%; /* Reducir el tamaño original a 60% para hacerlo un 40% más pequeño */
+    display: block;
+    margin: auto; /* Centrar la imagen horizontalmente */
+}
