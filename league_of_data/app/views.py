@@ -9,6 +9,8 @@ from django.http import JsonResponse
 from .services import save_summoner_matches_and_stats
 from .models import Summoner, Time_info, Match, Graphic_data
 from .graphs_code.graphs_detail import generate_graphs
+import matplotlib.pyplot as plt
+from io import BytesIO
 
 def buscarInvc(request):
   form = summoner_form()
@@ -55,55 +57,53 @@ def data_visualization(request):
     all_match_details = []
     
     for match in matches:
-        graphic_data = Graphic_data.objects.filter(match_id=match)
-        for data in graphic_data:  
+        graphic_data = Graphic_data.objects.filter(match_id=match).first()
+        if graphic_data:
             match_details = {
-                'match_id': match.api_match_id,
-                'championName': data.championName,
-                'kills': data.kills,
-                'assists': data.assists,
-                'deaths': data.deaths,
-                'goldEarned': data.goldEarned,
-                'totalDamageDealt': data.totalDamageDealt,
-                'totalDamageTaken': data.totalDamageTaken,
-                'role': data.role,
-                'lane': data.lane,
-                'win': data.win,
-                'goldSpent': data.goldSpent,
-                'totalHeal': data.totalHeal,
-                'totalHealOnTeammates': data.totalHealsOnTeammates,
-                'totalMinionsKilled': data.totalMinionsKilled,
-                'totalTimeSpentDead': data.totalTimeSpentDead,
-                'visionScore': data.visionScore,
-                'wardKilled': data.wardKilled,
-                'wardPlaced': data.wardPlaced,
-                'doubleKills': data.doubleKills,
-                'tripleKills': data.tripleKills,
-                'firstBloodAssist': data.firstBloodAssist,
-                'firstBloodKill': data.firstBloodKill,
-                'timePlayed': data.timePlayed,
-                'killingSprees': data.killingSprees,
-                'individualPosition': data.individualPosition,
-                'gameEndedInEarlySurrender': data.gameEndedInEarlySurrender,
-                'gameEndedInSurrender': data.gameEndedInSurrender
+                'match_id': match.id,
+                'championName': graphic_data.championName,
+                'kills': graphic_data.kills,
+                'assists': graphic_data.assists,
+                'deaths': graphic_data.deaths,
+                'goldEarned': graphic_data.goldEarned,
+                'totalDamageDealt': graphic_data.totalDamageDealt,
+                'totalDamageTaken': graphic_data.totalDamageTaken,
+                'role': graphic_data.role,
+                'lane': graphic_data.lane,
+                'win': graphic_data.win,
+                'goldSpent': graphic_data.goldSpent,
+                'totalHeal': graphic_data.totalHeal,
+                'totalHealOnTeammates': graphic_data.totalHealsOnTeammates,
+                'totalMinionsKilled': graphic_data.totalMinionsKilled,
+                'totalTimeSpentDead': graphic_data.totalTimeSpentDead,
+                'visionScore': graphic_data.visionScore,
+                'wardKilled': graphic_data.wardKilled,
+                'wardPlaced': graphic_data.wardPlaced,
+                'doubleKills': graphic_data.doubleKills,
+                'tripleKills': graphic_data.tripleKills,
+                'firstBloodAssist': graphic_data.firstBloodAssist,
+                'firstBloodKill': graphic_data.firstBloodKill,
+                'timePlayed': graphic_data.timePlayed,
+                'killingSprees': graphic_data.killingSprees,
+                'individualPosition': graphic_data.individualPosition,
+                'gameEndedInEarlySurrender': graphic_data.gameEndedInEarlySurrender,
+                'gameEndedInSurrender': graphic_data.gameEndedInSurrender,
+                'time_info': []
             }
-            all_match_details.append(match_details)
 
-            all_time_info = []
+        time_info = Time_info.objects.filter(match_id = match)
+        for time_data in time_info:
+            match_details['time_info'].append({
+                'minute': time_data.minute,
+                'damageDone': time_data.damageDone,
+                'damageTaken': time_data.damageTaken,
+                'gold': time_data.gold,
+                'xp': time_data.xp,
+                'minions': time_data.minions,
+                'level': time_data.level
+            })
         
-            time_info = Time_info.objects.filter(match_id = match)
-            for time_data in time_info:
-                time_details = {
-                    'match_id': time_data.match_id,
-                    'minute': time_data.minute,
-                    'damageDone': time_data.damageDone,
-                    'damageTaken': time_data.damageTaken,
-                    'gold': time_data.gold,
-                    'xp': time_data.xp,
-                    'minions': time_data.minions,
-                    'level': time_data.level
-                }
-                all_time_info.append(time_details)
+        all_match_details.append(match_details)
             
         generate_graphs(match)
         
@@ -116,7 +116,6 @@ def data_visualization(request):
     context = {
         'match_data': all_match_details,
         'summoner': summoner,
-        'time_info': all_time_info,
         'total_wins': total_wins,
         'total_losses': total_losses,
         'winrate': winrate,
@@ -125,3 +124,22 @@ def data_visualization(request):
         
     }
     return render(request, 'data_visualization.html', context)
+
+def plot_image(request, match_id, graph_type):
+    match = Match.objects.get(id=match_id)
+    result = generate_graphs(match)
+    graph_index = {
+        'daño': 0,
+        'exp': 1,
+        'minions': 2,
+        'nivel': 3,
+        'oro': 4
+    }.get(graph_type, 0)
+
+    fig = result[graph_index]
+    buf = BytesIO()
+    fig.savefig(buf, format="png")
+    plt.close(fig)
+    response = HttpResponse(buf.getvalue(), content_type="image/png")
+    response['Content-Length'] = str(len(response.content))
+    return response

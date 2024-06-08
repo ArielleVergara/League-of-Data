@@ -14,7 +14,7 @@ def generate_graphs(match):
         
         time_info_data = Time_info.objects.filter(match_id = match).values()
         # Paso 2: Convierte los datos a un DataFrame de pandas
-        match_id = (time_info_data[0]['match_id_id'])
+        """match_id = (time_info_data[0]['match_id_id'])"""
 
         """if not os.path.exists(f"./app/static/graphs/match_{match_id}/damage_{match_id}.png"):
                 os.makedirs(f"./app/static/graphs/match_{match_id}/damage_{match_id}.png")"""
