@@ -130,6 +130,10 @@ def get_match_list(summoner_puuid, region, api_key):
         print(f"Request exception occurred: {req_err}")
     return match_list
 
+def get_latest_match_id(match_list):
+    latest_match_id = match_list[0]
+    return latest_match_id
+
 def get_match_data(match_list, region, api_key):
     url_start = "https://"
     url_middle = ".api.riotgames.com/lol/match/v5/matches/"

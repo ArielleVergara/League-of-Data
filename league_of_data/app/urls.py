@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
     path('', home, name='home'),
     path('get_summoner/', get_summoner, name='get_summoner'),
-    path('data_visualization/', data_visualization, name='data_visualization'),
+    path('data_visualization/<str:summoner_name>', data_visualization, name='data_visualization'),
     path('busqueda/', buscarInvc, name="buscarInvc"),
     path('nosotros/', nosotros, name="nosotros"),
     path('plot_image/<int:match_id>/<str:graph_type>/', views.plot_image, name="plot_image"),

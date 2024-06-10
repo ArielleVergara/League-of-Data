@@ -63,7 +63,7 @@ def generate_graphs(match):
 
             plt.xlabel('Tiempo (min)')
             plt.ylabel('Minions')
-            plt.title('Minions al minuto')
+            plt.title('Minions por minuto')
             plt.grid()
             """plt.savefig(f"./app/static/graphs/match_{match_id}/minions_{match_id}.png")"""
             matplotlib.pyplot.close()
@@ -79,7 +79,7 @@ def generate_graphs(match):
 
             plt.xlabel('Tiempo (min)')
             plt.ylabel('Oro')
-            plt.title('Oro al minuto')
+            plt.title('Oro por minuto')
             plt.grid()
             """plt.savefig(f"./app/static/graphs/match_{match_id}/gold_{match_id}.png")"""
             matplotlib.pyplot.close()
@@ -95,7 +95,7 @@ def generate_graphs(match):
 
             plt.xlabel('Tiempo (min)')
             plt.ylabel('Experiencia')
-            plt.title('Experiencia')
+            plt.title('Experiencia por minuto')
             plt.grid()
             """plt.savefig(f"./app/static/graphs/match_{match_id}/xp_{match_id}.png")"""
             matplotlib.pyplot.close()
@@ -105,5 +105,5 @@ def generate_graphs(match):
     except:
         print(f"No hay datos en time_info_data")
     
-    return plt_daño, plt_exp, plt_minions, plt_nivel, plt_oro
+    return plt_daño, plt_nivel, plt_minions, plt_oro,plt_exp
     

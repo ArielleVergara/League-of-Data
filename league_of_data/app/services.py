@@ -12,6 +12,7 @@ from .graphs_code.fn_data_api import (
     get_participantId, get_win, get_timePlayed, get_killingSprees, get_longestTimeSpentLiving, get_match_minutes, get_time_info,
 )
 from django.core.exceptions import ValidationError
+import requests
 
 
 def validate_summoner_data(summ_info):
@@ -67,69 +68,50 @@ def validate_time_info(time_info):
             
     
 
-def save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region, api_key):
-
-    summ_info = {}
-
+def save_summoner_info(summoner_name, summoner_tag, summoner_region, api_key):
     account_info = get_account_info(summoner_name, summoner_tag, summoner_region, api_key)
     if not account_info:
         raise ValidationError("Account info could not be retrieved.")
-    
-    
+
     summoner_puuid = get_summoner_puuid(account_info)
     if not summoner_puuid:
         raise ValidationError("Summoner PUUID not found.")
-    
-    
+
     summoner_info = get_summoner_info(summoner_puuid, api_key)
     if not summoner_info:
         raise ValidationError("Account information could not be retrieved.")
-    
-    
+
     summoner_id = get_summoner_id(summoner_info)
     if not summoner_id:
         raise ValidationError("Summoner ID not found.")
-    
-    
+
     list_ranked_info = get_list_ranked_info(summoner_id, api_key)
     if not list_ranked_info:
         raise ValidationError("List ranked info could not be retrieved.")
-    
 
     ranked_info = get_ranked_info(list_ranked_info) if list_ranked_info else None
     if not ranked_info:
         raise ValidationError("Ranked info could not be retrieved.")
-    
 
     tier = get_tier(ranked_info) if ranked_info else None
     if not tier:
         raise ValidationError("Summoner tier not found.")
-    
 
     rank = get_rank(ranked_info) if ranked_info else None
     if not rank:
         raise ValidationError("Summoner rank not found.")
-    
 
     league_points = get_league_points(ranked_info) if ranked_info else None
     if not league_points:
         raise ValidationError("Summoner league points not found.")
-    
 
     total_wins = get_total_wins(ranked_info) if ranked_info else None
     if not total_wins:
         raise ValidationError("Summoner total wins not found.")
-    
 
     total_losses = get_total_losses(ranked_info) if ranked_info else None
     if not total_losses:
         raise ValidationError("Summoner total losses not found.")
-    
-
-    match_list = get_match_list(summoner_puuid, summoner_region, api_key)
-    if not match_list:
-        raise ValidationError("Match list could not be retrieved.")
-    
 
     summ_info = {
         'summoner_name': summoner_name,
@@ -144,213 +126,241 @@ def save_summoner_matches_and_stats(summoner_name, summoner_tag, summoner_region
         'tier': tier
     }
 
-    with transaction.atomic():
-        
-        validate_summoner_data(summ_info)
+    validate_summoner_data(summ_info)
+    try:
+        existing_summoner = Summoner.objects.get(puuid=summoner_puuid)
+        needs_update = any([
+            existing_summoner.summoner_name != summ_info['summoner_name'],
+            existing_summoner.summoner_tag != summ_info['summoner_tag'],
+            existing_summoner.region != summ_info['region'],
+            existing_summoner.summoner_id != summ_info['summoner_id'],
+            existing_summoner.puuid != summ_info['puuid'],
+            existing_summoner.league_points != summ_info['league_points'],
+            existing_summoner.total_wins != summ_info['total_wins'],
+            existing_summoner.total_losses != summ_info['total_losses'],
+            existing_summoner.rank != summ_info['rank'],
+            existing_summoner.tier != summ_info['tier'],
+        ])
+    except Summoner.DoesNotExist:
+        existing_summoner = None
+        needs_update = True
 
+    if needs_update:
         summoner, _ = Summoner.objects.update_or_create(
             puuid=summoner_puuid,
-            defaults={
-                'summoner_id': summoner_id,
-                'puuid': summoner_puuid,
-                'summoner_name': summoner_name,
-                'summoner_tag': summoner_tag,
-                'region': summoner_region,
-                'league_points': league_points,
-                'total_wins': total_wins,
-                'total_losses': total_losses,
-                'rank': rank,
-                'tier': tier,
-            }
+            defaults=summ_info
         )
+        return summoner
+    else:
+        return existing_summoner
 
+def save_matches_stats(summoner, api_key):
+    match_list = get_match_list(summoner.puuid, summoner.region, api_key)
+    if not match_list:
+        raise ValidationError("Match list could not be retrieved.")
+    for match_id in match_list:
+        match_data = get_match_data([match_id], summoner.region, api_key)
+        if not match_data:
+            print(f"No data found for match ID {match_id}")
+            continue
+        
+        for match in match_data:
 
-        for match_id in match_list[:5]:
-            match_data = get_match_data([match_id], summoner_region, api_key)
-            if not match_data:
-                print(f"No data found for match ID {match_id}")
-                continue
+            account_info = get_account_info(summoner.summoner_name, summoner.summoner_tag, summoner.region, api_key)
+            if not account_info:
+                raise ValidationError("Account info could not be retrieved.")
+
+            summoner_puuid = get_summoner_puuid(account_info)
+            if not summoner_puuid:
+                raise ValidationError("Summoner PUUID not found.")
+
+            summoner_info = get_summoner_info(summoner_puuid, api_key)
+            if not summoner_info:
+                raise ValidationError("Account information could not be retrieved.")
+
+            summoner_id = get_summoner_id(summoner_info)
+            if not summoner_id:
+                raise ValidationError("Summoner ID not found.")
             
-            for match in match_data:
-                summoner_index = get_summoner_index(match, summoner_puuid)
-                
-                summoner_data = get_summoner_data(match, summoner_index)
+            summoner_index = get_summoner_index(match, summoner_puuid)
+            
+            summoner_data = get_summoner_data(match, summoner_index)
 
-                kills = get_kills(summoner_data)
-                deaths = get_deaths(summoner_data)
-                assists = get_assists(summoner_data)
-                champion_id = get_championId(summoner_data)
-                champion_name = get_championName(summoner_data)
-                gold_earned = get_goldEarned(summoner_data)
-                gold_spendt = get_goldSpent(summoner_data)
-                totalDamageDealt = get_totalDamageDealt(summoner_data)
-                totalDamageTaken = get_totalDamageTaken(summoner_data)
-                totalHeal = get_totalHeal(summoner_data)
-                totalHealsOnTeammates = get_totalHealsOnTeammates(summoner_data)
-                totalMinionsKilled = get_totalMinionsKilled(summoner_data)
-                totalTimeSpentDead = get_totalTimeSpentDead(summoner_data)
-                totalUnitsHealed = get_unitsHealed(summoner_data)
-                visionScore = get_visionScore(summoner_data)
-                wardKilled = get_wardKilled(summoner_data)
-                wardPlaced = get_wardsPlaced(summoner_data)
-                role = get_role(summoner_data)
-                lane = get_lane(summoner_data)
-                participantId = get_participantId(summoner_data)
-                doubleKills = get_doubleKills(summoner_data)
-                tripleKills = get_tripleKills(summoner_data)
-                firstBloodAssist = get_firstBloodAssist(summoner_data)
-                firstBloodKill = get_firstBloodKill(summoner_data)
-                individualPosition = get_individualPosition(summoner_data)
-                gameEndedInEarlySurrender = get_gameEndedInEarlySurrender(summoner_data)
-                gameEndedInSurrender = get_gameEndedInSurrender(summoner_data)
-                killingSprees = get_killingSprees(summoner_data)
-                longestTimeSpentLiving = get_longestTimeSpentLiving(summoner_data)
-                timePlayed = get_timePlayed(summoner_data)
-                win = get_win(summoner_data)
-                spell1Casts = get_spell1Cast(summoner_data)
-                spell2Casts = get_spell2Cast(summoner_data)
-                spell3Casts = get_spell3Cast(summoner_data)
-                spell4Casts = get_spell4Cast(summoner_data)
-                
-                mtch_info = {
-                    'match_id': match_id,
-                    'summoner_id': summoner_id,
-                    'participantId': participantId,
-                    'championId': champion_id,
-                    'championName': champion_name,
-                    'win': win,
-                    'timePlayed': timePlayed,
-                    'spell1Casts': spell1Casts,
-                    'spell2Casts': spell2Casts,
-                    'spell3Casts': spell3Casts,
-                    'spell4Casts': spell4Casts,
-                    'longestTimeSpentLiving': longestTimeSpentLiving,
-                    'killingSprees': killingSprees,
-                    'individualPosition': individualPosition,
-                    'gameEndedInEarlySurrender': gameEndedInEarlySurrender,
-                    'gameEndedInSurrender': gameEndedInSurrender,
-                    'kills': kills,
-                    'deaths': deaths,
-                    'assists': assists,
-                    'goldSpent': gold_spendt,
-                    'goldEarned': gold_earned,
-                    'totalDamageDealt': totalDamageDealt,
-                    'totalDamageTaken': totalDamageTaken,
-                    'totalHeal': totalHeal,
-                    'totalHealsOnTeammates': totalHealsOnTeammates,
-                    'totalMinionsKilled': totalMinionsKilled,
-                    'totalTimeSpentDead': totalTimeSpentDead,
-                    'totalUnitsHealed': totalUnitsHealed,
-                    'visionScore': visionScore,
-                    'wardKilled': wardKilled,
-                    'wardPlaced': wardPlaced,
-                    'role': role,
-                    'lane': lane,
-                    'doubleKills': doubleKills,
-                    'tripleKills': tripleKills,
-                    'firstBloodAssist': firstBloodAssist,
-                    'firstBloodKill': firstBloodKill,
+            kills = get_kills(summoner_data)
+            deaths = get_deaths(summoner_data)
+            assists = get_assists(summoner_data)
+            champion_id = get_championId(summoner_data)
+            champion_name = get_championName(summoner_data)
+            gold_earned = get_goldEarned(summoner_data)
+            gold_spendt = get_goldSpent(summoner_data)
+            totalDamageDealt = get_totalDamageDealt(summoner_data)
+            totalDamageTaken = get_totalDamageTaken(summoner_data)
+            totalHeal = get_totalHeal(summoner_data)
+            totalHealsOnTeammates = get_totalHealsOnTeammates(summoner_data)
+            totalMinionsKilled = get_totalMinionsKilled(summoner_data)
+            totalTimeSpentDead = get_totalTimeSpentDead(summoner_data)
+            totalUnitsHealed = get_unitsHealed(summoner_data)
+            visionScore = get_visionScore(summoner_data)
+            wardKilled = get_wardKilled(summoner_data)
+            wardPlaced = get_wardsPlaced(summoner_data)
+            role = get_role(summoner_data)
+            lane = get_lane(summoner_data)
+            participantId = get_participantId(summoner_data)
+            doubleKills = get_doubleKills(summoner_data)
+            tripleKills = get_tripleKills(summoner_data)
+            firstBloodAssist = get_firstBloodAssist(summoner_data)
+            firstBloodKill = get_firstBloodKill(summoner_data)
+            individualPosition = get_individualPosition(summoner_data)
+            gameEndedInEarlySurrender = get_gameEndedInEarlySurrender(summoner_data)
+            gameEndedInSurrender = get_gameEndedInSurrender(summoner_data)
+            killingSprees = get_killingSprees(summoner_data)
+            longestTimeSpentLiving = get_longestTimeSpentLiving(summoner_data)
+            timePlayed = get_timePlayed(summoner_data)
+            win = get_win(summoner_data)
+            spell1Casts = get_spell1Cast(summoner_data)
+            spell2Casts = get_spell2Cast(summoner_data)
+            spell3Casts = get_spell3Cast(summoner_data)
+            spell4Casts = get_spell4Cast(summoner_data)
+            
+            mtch_info = {
+                'match_id': match_id,
+                'summoner_id': summoner_id,
+                'participantId': participantId,
+                'championId': champion_id,
+                'championName': champion_name,
+                'win': win,
+                'timePlayed': timePlayed,
+                'spell1Casts': spell1Casts,
+                'spell2Casts': spell2Casts,
+                'spell3Casts': spell3Casts,
+                'spell4Casts': spell4Casts,
+                'longestTimeSpentLiving': longestTimeSpentLiving,
+                'killingSprees': killingSprees,
+                'individualPosition': individualPosition,
+                'gameEndedInEarlySurrender': gameEndedInEarlySurrender,
+                'gameEndedInSurrender': gameEndedInSurrender,
+                'kills': kills,
+                'deaths': deaths,
+                'assists': assists,
+                'goldSpent': gold_spendt,
+                'goldEarned': gold_earned,
+                'totalDamageDealt': totalDamageDealt,
+                'totalDamageTaken': totalDamageTaken,
+                'totalHeal': totalHeal,
+                'totalHealsOnTeammates': totalHealsOnTeammates,
+                'totalMinionsKilled': totalMinionsKilled,
+                'totalTimeSpentDead': totalTimeSpentDead,
+                'totalUnitsHealed': totalUnitsHealed,
+                'visionScore': visionScore,
+                'wardKilled': wardKilled,
+                'wardPlaced': wardPlaced,
+                'role': role,
+                'lane': lane,
+                'doubleKills': doubleKills,
+                'tripleKills': tripleKills,
+                'firstBloodAssist': firstBloodAssist,
+                'firstBloodKill': firstBloodKill,
+            }
+
+            
+            validate_match_data(mtch_info)
+
+            match_instance, _ = Match.objects.update_or_create(
+                summoner_id=summoner, api_match_id=match_id
+            )
+
+            Graphic_data.objects.update_or_create(
+                summoner_id=summoner,
+                match_id=match_instance,
+                defaults={
+                    'kills': get_kills(summoner_data),
+                    'deaths': get_deaths(summoner_data),
+                    'assists': get_assists(summoner_data),                  
+                    'championId': get_championId(summoner_data),
+                    'championName': get_championName(summoner_data),
+                    'goldEarned': get_goldEarned(summoner_data),
+                    'goldSpent': get_goldSpent(summoner_data),
+                    'totalDamageDealt': get_totalDamageDealt(summoner_data),
+                    'totalDamageTaken': get_totalDamageTaken(summoner_data),
+                    'totalHeal': get_totalHeal(summoner_data),
+                    'totalHealsOnTeammates': get_totalHealsOnTeammates(summoner_data),
+                    'totalMinionsKilled': get_totalMinionsKilled(summoner_data),
+                    'totalTimeSpentDead': get_totalTimeSpentDead(summoner_data),
+                    'totalUnitsHealed': get_unitsHealed(summoner_data),
+                    'visionScore': get_visionScore(summoner_data),
+                    'wardKilled': get_wardKilled(summoner_data),
+                    'wardPlaced': get_wardsPlaced(summoner_data),
+                    'role': get_role(summoner_data),
+                    'lane': get_lane(summoner_data),
+                    'participantId': get_participantId(summoner_data),
+                    'doubleKills': get_doubleKills(summoner_data),
+                    'tripleKills': get_tripleKills(summoner_data),
+                    'firstBloodAssist': get_firstBloodAssist(summoner_data),
+                    'firstBloodKill': get_firstBloodKill(summoner_data),
+                    'win': get_win(summoner_data),
+                    'timePlayed': get_timePlayed(summoner_data),
+                    'spell1Casts': get_spell1Cast(summoner_data),
+                    'spell2Casts': get_spell2Cast(summoner_data),
+                    'spell3Casts': get_spell3Cast(summoner_data),
+                    'spell4Casts': get_spell4Cast(summoner_data),
+                    'longestTimeSpentLiving': get_longestTimeSpentLiving(summoner_data),
+                    'killingSprees': get_killingSprees(summoner_data),
+                    'individualPosition': get_individualPosition(summoner_data),
+                    'gameEndedInEarlySurrender': get_gameEndedInEarlySurrender(summoner_data),
+                    'gameEndedInSurrender': get_gameEndedInSurrender(summoner_data)
                 }
+            )
+            
+            time_info = get_time_info(match_id, api_key, summoner.region,)
+            if not time_info:
+                print(f"No time data found for match ID {match_id}")
+                continue
 
-                
-                validate_match_data(mtch_info)
+            minutes = get_match_minutes(time_info)
+            minutes_list = range(minutes)
+            summoner_position = f"{summoner_index + 1}"
+            time_damageDone = 0
+            time_damageTaken = 0
+            time_level = 0
+            time_minions = 0
+            time_gold = 0
+            time_xp = 0
+            min = 0
 
-                match_instance, _ = Match.objects.update_or_create(
-                    summoner_id=summoner, api_match_id=match_id
-                )
+            for i in minutes_list:
+                summoner_time_info = time_info[i]['participantFrames'][summoner_position]
+                min = i+1
+                time_damageDone = summoner_time_info['damageStats']['totalDamageDoneToChampions']
+                time_damageTaken = summoner_time_info['damageStats']['totalDamageTaken']
+                time_level = summoner_time_info['level']
+                time_minions = summoner_time_info['minionsKilled']
+                time_gold = summoner_time_info['totalGold']
+                time_xp = summoner_time_info['xp']
 
-                Graphic_data.objects.update_or_create(
-                    summoner_id=summoner,
-                    match_id=match_instance,
-                    defaults={
-                        'kills': get_kills(summoner_data),
-                        'deaths': get_deaths(summoner_data),
-                        'assists': get_assists(summoner_data),                  
-                        'championId': get_championId(summoner_data),
-                        'championName': get_championName(summoner_data),
-                        'goldEarned': get_goldEarned(summoner_data),
-                        'goldSpent': get_goldSpent(summoner_data),
-                        'totalDamageDealt': get_totalDamageDealt(summoner_data),
-                        'totalDamageTaken': get_totalDamageTaken(summoner_data),
-                        'totalHeal': get_totalHeal(summoner_data),
-                        'totalHealsOnTeammates': get_totalHealsOnTeammates(summoner_data),
-                        'totalMinionsKilled': get_totalMinionsKilled(summoner_data),
-                        'totalTimeSpentDead': get_totalTimeSpentDead(summoner_data),
-                        'totalUnitsHealed': get_unitsHealed(summoner_data),
-                        'visionScore': get_visionScore(summoner_data),
-                        'wardKilled': get_wardKilled(summoner_data),
-                        'wardPlaced': get_wardsPlaced(summoner_data),
-                        'role': get_role(summoner_data),
-                        'lane': get_lane(summoner_data),
-                        'participantId': get_participantId(summoner_data),
-                        'doubleKills': get_doubleKills(summoner_data),
-                        'tripleKills': get_tripleKills(summoner_data),
-                        'firstBloodAssist': get_firstBloodAssist(summoner_data),
-                        'firstBloodKill': get_firstBloodKill(summoner_data),
-                        'win': get_win(summoner_data),
-                        'timePlayed': get_timePlayed(summoner_data),
-                        'spell1Casts': get_spell1Cast(summoner_data),
-                        'spell2Casts': get_spell2Cast(summoner_data),
-                        'spell3Casts': get_spell3Cast(summoner_data),
-                        'spell4Casts': get_spell4Cast(summoner_data),
-                        'longestTimeSpentLiving': get_longestTimeSpentLiving(summoner_data),
-                        'killingSprees': get_killingSprees(summoner_data),
-                        'individualPosition': get_individualPosition(summoner_data),
-                        'gameEndedInEarlySurrender': get_gameEndedInEarlySurrender(summoner_data),
-                        'gameEndedInSurrender': get_gameEndedInSurrender(summoner_data)
-                    }
-                )
-                
-                time_info = get_time_info(match_id, api_key, summoner_region,)
-                if not time_info:
-                    print(f"No time data found for match ID {match_id}")
-                    continue
-
-                minutes = get_match_minutes(time_info)
-                minutes_list = range(minutes)
-                summoner_position = f"{summoner_index + 1}"
-                time_damageDone = 0
-                time_damageTaken = 0
-                time_level = 0
-                time_minions = 0
-                time_gold = 0
-                time_xp = 0
-                min = 0
-
-                for i in minutes_list:
-                    summoner_time_info = time_info[i]['participantFrames'][summoner_position]
-                    min = i+1
-                    time_damageDone = summoner_time_info['damageStats']['totalDamageDoneToChampions']
-                    time_damageTaken = summoner_time_info['damageStats']['totalDamageTaken']
-                    time_level = summoner_time_info['level']
-                    time_minions = summoner_time_info['minionsKilled']
-                    time_gold = summoner_time_info['totalGold']
-                    time_xp = summoner_time_info['xp']
-
-                    tm_info = {
-                        'minuto': min,
-                        'damageDone': time_damageDone,
-                        'damageTaken': time_damageTaken,
-                        'level': time_level,
-                        'minions': time_minions,
-                        'gold': time_gold,
-                        'xp': time_xp
-                    }
-                    validate_time_info(tm_info)
+                tm_info = {
+                    'minuto': min,
+                    'damageDone': time_damageDone,
+                    'damageTaken': time_damageTaken,
+                    'level': time_level,
+                    'minions': time_minions,
+                    'gold': time_gold,
+                    'xp': time_xp
+                }
+                validate_time_info(tm_info)
 
 
-                    time_info_instance, _ = Time_info.objects.update_or_create(
-                    match_id = match_instance,
-                    minute = min,
-                    defaults={
-                        'damageDone': time_damageDone,
-                        'damageTaken': time_damageTaken,
-                        'gold': time_gold,
-                        'xp': time_xp,
-                        'minions': time_minions,
-                        'level': time_level
-                    }
-                )
+                time_info_instance, _ = Time_info.objects.update_or_create(
+                match_id = match_instance,
+                minute = min,
+                defaults={
+                    'damageDone': time_damageDone,
+                    'damageTaken': time_damageTaken,
+                    'gold': time_gold,
+                    'xp': time_xp,
+                    'minions': time_minions,
+                    'level': time_level
+                }
+            )
 
 
     
