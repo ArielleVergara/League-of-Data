@@ -1,26 +1,28 @@
 import requests
+from django.core.cache import cache
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 
 
 def get_account_info(summoner_name, summoner_tag, summoner_region, api_key):
-    url_start = "https://"
-    url_finish = ".api.riotgames.com/riot/account/v1/accounts/by-riot-id/"
-    api_url = f"{url_start}{summoner_region}{url_finish}{summoner_name}/{summoner_tag}?api_key={api_key}"
-    account_info = None
-
+    cache_key = f"account-info-{summoner_name}-{summoner_tag}-{summoner_region}"
     try:
-        resp_summoner = requests.get(api_url)
-        resp_summoner.raise_for_status()
-        account_info = resp_summoner.json()
-    except HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
-    except ConnectionError as conn_err:
-        print(f"Connection error occurred: {conn_err}")
-    except Timeout as timeout_err:
-        print(f"Timeout error occurred: {timeout_err}")
-    except RequestException as req_err:
-        print(f"Request exception occurred: {req_err}")
-    return account_info
+        account_info = cache.get(cache_key)
+        if not account_info:
+            url = f"https://{summoner_region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summoner_name}/{summoner_tag}?api_key={api_key}"
+            response = requests.get(url)
+            response.raise_for_status()
+            account_info = response.json()
+            cache.set(cache_key, account_info, timeout=3600)
+            cache.set(f"summoner-name-{summoner_name}", summoner_name, timeout=3600)
+        return account_info
+    except requests.exceptions.HTTPError as e:
+        error_message = f"HTTP error occurred: {e}"
+    except requests.exceptions.ConnectionError:
+        error_message = "Connection error occurred"
+    except Exception as e:
+        error_message = f"An unexpected error occurred: {e}"
+    
+    return None, error_message
 
 def get_summoner_puuid(account_info):
     summoner_puuid = account_info['puuid']
@@ -109,67 +111,84 @@ def get_total_losses (ranked_info):
     return total_losses
 
 def get_match_list(summoner_puuid, region, api_key):
-    url_start = "https://"
-    url_middle = ".api.riotgames.com/lol/match/v5/matches/by-puuid/"
-    url_finish = "/ids?type=ranked&start=0&count=20&api_key="
+    cache_key = f'match-list-{summoner_puuid}-{region}'
+    match_list = cache.get(cache_key)
+    if not match_list:
+        url_start = "https://"
+        url_middle = ".api.riotgames.com/lol/match/v5/matches/by-puuid/"
+        url_finish = "/ids?type=ranked&start=0&count=20&api_key="
 
-    match_list = []
-
-    try:
-        api_url = f"{url_start}{region}{url_middle}{summoner_puuid}{url_finish}{api_key}"
-        resp_list = requests.get(api_url)
-        resp_list.raise_for_status()
-        match_list = resp_list.json()
-    except HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
-    except ConnectionError as conn_err:
-        print(f"Connection error occurred: {conn_err}")
-    except Timeout as timeout_err:
-        print(f"Timeout error occurred: {timeout_err}")
-    except RequestException as req_err:
-        print(f"Request exception occurred: {req_err}")
+        try:
+            api_url = f"{url_start}{region}{url_middle}{summoner_puuid}{url_finish}{api_key}"
+            resp_list = requests.get(api_url)
+            resp_list.raise_for_status()
+            match_list = resp_list.json()
+        except HTTPError as http_err:
+            print(f"HTTP error occurred: {http_err}")
+        except ConnectionError as conn_err:
+            print(f"Connection error occurred: {conn_err}")
+        except Timeout as timeout_err:
+            print(f"Timeout error occurred: {timeout_err}")
+        except RequestException as req_err:
+            print(f"Request exception occurred: {req_err}")
     return match_list
 
 def get_latest_match_id(match_list):
     latest_match_id = match_list[0]
     return latest_match_id
 
-def get_match_data(match_list, region, api_key):
+def get_match_data(match_id, region, api_key):
     url_start = "https://"
-    url_middle = ".api.riotgames.com/lol/match/v5/matches/"
+    url_middle = f"{region}.api.riotgames.com/lol/match/v5/matches/"
     url_finish = "?api_key="
-    
-    all_match_data = []
 
-    for match_id in match_list:
-        api_url = f"{url_start}{region}{url_middle}{match_id}{url_finish}{api_key}"
-        try:
-            resp_match = requests.get(api_url)
-            resp_match.raise_for_status()
-            match_data = resp_match.json()
-            all_match_data.append(match_data)
-        except HTTPError as http_err:
-            print(f"No se ha podido acceder a la API Match para el match ID {match_id} (response != 200): {http_err}")
-        except ConnectionError as conn_err:
-            print(f"No se pudo conectar con la API Matches para el match ID {match_id}: {conn_err}")
-        except Timeout as timeout_err:
-            print(f"Timeout error occurred for match ID {match_id}: {timeout_err}")
-        except RequestException as req_err:
-            print(f"Request exception occurred for match ID {match_id}: {req_err}")
+    api_url = f"{url_start}{url_middle}{match_id}{url_finish}{api_key}"
+    match_data = None
 
-    return all_match_data
+    try:
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            try:
+                match_data = response.json()  # Intenta convertir la respuesta a JSON
+            except ValueError:
+                print(f"Error decoding JSON from response for match ID {match_id}")
+                return None
+        else:
+            print(f"API response not successful for match ID {match_id}: {response.status_code}")
+            return None
+    except HTTPError as http_err:
+        print(f"No se ha podido acceder a la API Match para el match ID {match_id} (response != 200): {http_err}")
+    except ConnectionError as conn_err:
+        print(f"No se pudo conectar con la API Matches para el match ID {match_id}: {conn_err}")
+    except Timeout as timeout_err:
+        print(f"Timeout error occurred for match ID {match_id}: {timeout_err}")
+    except RequestException as req_err:
+        print(f"Request exception occurred for match ID {match_id}: {req_err}")
+    return match_data
 
-def get_summoner_index(all_match_data, summoner_puuid):
-    summoner_index = all_match_data['metadata']['participants'].index(summoner_puuid)
+def get_participants(match_data):
+    participants = match_data['metadata']['participants']
+    return participants
+
+def get_summoner_index(participants, summoner_puuid):
+    summoner_index = participants.index(summoner_puuid)
     return summoner_index
 
-def get_summoner_data(all_match_data, summoner_index):
-    summoner_data = all_match_data['info']['participants'][summoner_index]
+def get_participants_info(match_data):
+    participants_info = match_data['info']['participants']
+    return participants_info
+
+def get_summoner_data(participants_info, summoner_index):
+    summoner_data = participants_info[summoner_index]
     return summoner_data
 
 def get_kills(summoner_data):
-    summoner_kills = summoner_data['kills']
-    return summoner_kills
+    try:
+        return summoner_data['kills']
+    except KeyError:
+        # Manejo del caso en que 'kills' no está presente
+        print("No se encontró la clave 'kills' en los datos del invocador.")
+        return 0
 
 def get_assists(summoner_data):
     summoner_assists = summoner_data['assists']
@@ -333,6 +352,34 @@ def get_time_info(id_match, api_key, summoner_region):
     return time_info
 
 def get_match_minutes(time_info):
-    minutes = len(time_info)
+    minutes = []
+    for min in range(len(time_info)):
+        minutes.append(min)
     return minutes
+
+def get_summoner_position(id_match, api_key, summoner_region, summoner_index):
+    api_start = "https://"
+    api_middle = ".api.riotgames.com/lol/match/v5/matches/"
+    api_finish = "/timeline?api_key="
+    api_url = f"{api_start}{summoner_region}{api_middle}{id_match}{api_finish}{api_key}"
+
+    summoner_position = ""
+    sum_index = f"{summoner_index +1}"
+
+    try:
+        resp_time = requests.get(api_url)
+        resp_time.raise_for_status()
+        time = resp_time.json()
+    except HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+    except ConnectionError as conn_err:
+        print(f"Connection error occurred: {conn_err}")
+    except Timeout as timeout_err:
+        print(f"Timeout error occurred: {timeout_err}")
+    except RequestException as req_err:
+        print(f"Request exception occurred: {req_err}")
+
+    summoner_position = time['info']['participants'][sum_index]
+    return summoner_position
+
 

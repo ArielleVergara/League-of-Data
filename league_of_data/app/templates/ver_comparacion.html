@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div>
+    <h2>Comparación de Jugadores</h2>
+    <div>
+        <h3>{{ summoner1.summoner_name }} ({{ summoner1.region }})</h3>
+        <p>Total Wins: {{ summoner1.total_wins }}</p>
+        <!-- Más estadísticas y gráficos -->
+    </div>
+    <div>
+        <h3>{{ summoner2.summoner_name }} ({{ summoner2.region }})</h3>
+        <p>Total Wins: {{ summoner2.total_wins }}</p>
+        <!-- Más estadísticas y gráficos -->
+    </div>
+</div>
+{% endblock %}
