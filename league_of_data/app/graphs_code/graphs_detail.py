@@ -40,6 +40,7 @@ def generate_graphs(time_info, match_id):
             plt.xlabel('Tiempo (min)')
             plt.ylabel('Daño')
             plt.title('Daño Hecho por Minuto')
+            plt.legend()
             plt.grid()
             matplotlib.pyplot.close()
             

@@ -219,6 +219,7 @@ def send_time_info(match_id, api_key, summoner_name):
         match_data = get_match_data(match_id, summoner.region, api_key)
         participants = get_participants(match_data)
         summoner_index = get_summoner_index(participants, summoner.puuid)
+        summoner_index = f"{summoner_index +1}"
         time_info = get_time_info(match_id, api_key, summoner.region)
 
         if not time_info:
@@ -231,7 +232,7 @@ def send_time_info(match_id, api_key, summoner_name):
 
         with transaction.atomic():
             for min in minutes:
-                summoner_time_info = time_info[min]['participantFrames'][str(summoner_index)]
+                summoner_time_info = time_info[min]['participantFrames'][summoner_index]
                 match_time_info = {
                     'match_id': int(match.id),
                     'summoner_id': summoner.id,
