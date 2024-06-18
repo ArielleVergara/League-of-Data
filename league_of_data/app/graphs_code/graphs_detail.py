@@ -5,14 +5,33 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.pyplot as plt
 
+def extract_data(time_info):
+    sorted_time_info = sorted(time_info, key=lambda x: (x.match_id.id, x.minute))
+    data_list = []
+    for obj in time_info:
+        data = {
+            'minuto': obj.minute,
+            'damageDone': obj.damageDone,
+            'damageTaken': obj.damageTaken, 
+            'level': obj.level,
+            'minions': obj.minions, 
+            'gold': obj.gold,
+            'xp': obj.xp, 
+            'match_id': obj.match_id 
+        }
+        data_list.append(data)
+    return data_list
 
-def generate_graphs(match):
+def generate_graphs(time_info, match_id):
+    data_list = extract_data(time_info)
+    if not data_list:
+        print(f"No hay datos en time_info para la partida {match_id} ")
+        return None
+    
     try:
-        time_info_data = match
-        #print(time_info_data)
-        for time_info in time_info_data:
-            print(time_info)   
-            df = pd.DataFrame(time_info)
+        for data in data_list:
+            #print(data)   
+            df = pd.DataFrame([data])
             try: 
                 # Paso 4: Crea gráficos con matplotlib
                 plt_daño = plt.figure(figsize=(10, 6))
@@ -20,7 +39,6 @@ def generate_graphs(match):
                 # Ejemplo: Gráfico de daño hecho por minuto
                 plt.plot(df['minuto'], df['damageDone'], color="g", label='Daño Hecho')
                 plt.plot(df['minuto'], df['damageTaken'], color="r", label='Daño Recibido')
-
                 plt.xlabel('Tiempo (min)')
                 plt.ylabel('Daño')
                 plt.title('Daño Hecho por Minuto')
@@ -97,6 +115,6 @@ def generate_graphs(match):
         
     except:
         print(f"No hay datos en time_info_data")
-    
+    print(f"League of Data: Los datos están listos para visualizar.")
     return plt_daño, plt_nivel, plt_minions, plt_oro,plt_exp
     

@@ -11,6 +11,7 @@ class Summoner (models.Model):
     total_losses = models.IntegerField (verbose_name= 'total losses', default=None)
     rank = models.CharField(max_length=255, default=None)
     tier = models.CharField(max_length=255, default=None)
+    profile_icon = models.IntegerField (verbose_name= 'ícono de cuenta', default=None)
 
 class Match (models.Model):
     summoner_id = models.ForeignKey(Summoner, on_delete=models.CASCADE)
@@ -32,6 +33,7 @@ class Graphic_data (models.Model):
 
 class Time_info (models.Model):
     match_id = models.ForeignKey(Match, on_delete=models.CASCADE)
+    summoner_id = models.ForeignKey(Summoner, on_delete=models.CASCADE, default=None)
     minute = models.IntegerField(verbose_name='minuto de la partida', default=None)
     damageDone = models.IntegerField(verbose_name= 'daño hecho', default=None)
     damageTaken = models.IntegerField(verbose_name= 'daño tomado', default=None)

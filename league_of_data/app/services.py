@@ -11,17 +11,19 @@ from .graphs_code.fn_data_api import (
     get_doubleKills, get_tripleKills, get_firstBloodAssist, get_firstBloodKill, get_individualPosition, 
     get_gameEndedInEarlySurrender, get_gameEndedInSurrender, get_wardKilled, get_wardsPlaced, get_role, get_lane, 
     get_participantId, get_win, get_timePlayed, get_killingSprees, get_longestTimeSpentLiving, get_match_minutes, get_time_info, 
-    get_participants, get_participants_info
+    get_participants, get_participants_info, get_profile_icon
 )
 from django.core.exceptions import ValidationError
 import requests
+import logging
 
+logger = logging.getLogger(__name__)
 
 def validate_summoner_data(summ_info):
 
 
     required_fields = ['summoner_name', 'puuid', 'summoner_tag', 'region', 'summoner_id',
-                        'league_points', 'total_wins', 'total_losses', 'rank', 'tier']
+                        'league_points', 'total_wins', 'total_losses', 'rank', 'tier', 'profile_icon']
     
     if not summ_info:
         raise ValidationError("Account info is missing.")
@@ -50,63 +52,78 @@ def validate_match_data(match_details):
             raise ValidationError("Invalid participant ID.")
 
 def validate_time_info(time_info):
-    required_fields = ['xp', 'gold', 'level', 'minions', 'damageTaken', 'damageDone']
+    required_fields = ['match_id', 'xp', 'gold', 'level', 'minions', 'damageTaken', 'damageDone', 'minute', 'summoner_id']
 
     if not time_info:
         raise ValidationError("Time info is missing.")
-    
+
     for field in required_fields:
         if field not in time_info:
-            raise ValidationError(f"Missing required match field: {field}")
-    if not time_info[field]:
-            raise ValidationError(f"Empty value for required time_info field: {field}")
-            
+            raise ValidationError(f"Missing required time info field: {field}")
+        if time_info[field] is None or (isinstance(time_info[field], (list, dict)) and not time_info[field]):
+            raise ValidationError(f"Empty or invalid value for required time_info field: {field}")        
     
 
 def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key):
-    account_info = get_account_info(summoner_name, summoner_tag, summoner_region, api_key)
-    if not account_info:
-        raise ValidationError("Account info could not be retrieved.")
+    try:
+        account_info = get_account_info(summoner_name, summoner_tag, summoner_region, api_key)
+        if not account_info:
+            raise ValidationError("Account info could not be retrieved.")
+        #print(account_info)
+        summoner_puuid = get_summoner_puuid(account_info)
+        if not summoner_puuid:
+            raise ValidationError("Summoner PUUID not found.")
 
-    summoner_puuid = get_summoner_puuid(account_info)
-    if not summoner_puuid:
-        raise ValidationError("Summoner PUUID not found.")
+        summoner_info = get_summoner_info(summoner_puuid, api_key)
+        if not summoner_info:
+            raise ValidationError("Account information could not be retrieved.")
 
-    summoner_info = get_summoner_info(summoner_puuid, api_key)
-    if not summoner_info:
-        raise ValidationError("Account information could not be retrieved.")
+        summoner_id = get_summoner_id(summoner_info)
+        if not summoner_id:
+            raise ValidationError("Summoner ID not found.")
+        
+        profile_icon = get_profile_icon(summoner_info) if summoner_info else None
+        if not profile_icon:
+            raise ValidationError("Summoner profile icon not found.")
+        #print(profile_icon)
 
-    summoner_id = get_summoner_id(summoner_info)
-    if not summoner_id:
-        raise ValidationError("Summoner ID not found.")
+        list_ranked_info = get_list_ranked_info(summoner_id, api_key)
+        if not list_ranked_info:
+            raise ValidationError("List ranked info could not be retrieved.")
 
-    list_ranked_info = get_list_ranked_info(summoner_id, api_key)
-    if not list_ranked_info:
-        raise ValidationError("List ranked info could not be retrieved.")
+        ranked_info = get_ranked_info(list_ranked_info) if list_ranked_info else None
+        if not ranked_info:
+            raise ValidationError("Ranked info could not be retrieved.")
 
-    ranked_info = get_ranked_info(list_ranked_info) if list_ranked_info else None
-    if not ranked_info:
-        raise ValidationError("Ranked info could not be retrieved.")
+        tier = get_tier(ranked_info) if ranked_info else None
+        if not tier:
+            raise ValidationError("Summoner tier not found.")
 
-    tier = get_tier(ranked_info) if ranked_info else None
-    if not tier:
-        raise ValidationError("Summoner tier not found.")
+        rank = get_rank(ranked_info) if ranked_info else None
+        if not rank:
+            raise ValidationError("Summoner rank not found.")
 
-    rank = get_rank(ranked_info) if ranked_info else None
-    if not rank:
-        raise ValidationError("Summoner rank not found.")
+        league_points = get_league_points(ranked_info) if ranked_info else None
+        if not league_points:
+            raise ValidationError("Summoner league points not found.")
 
-    league_points = get_league_points(ranked_info) if ranked_info else None
-    if not league_points:
-        raise ValidationError("Summoner league points not found.")
+        total_wins = get_total_wins(ranked_info) if ranked_info else None
+        if not total_wins:
+            raise ValidationError("Summoner total wins not found.")
 
-    total_wins = get_total_wins(ranked_info) if ranked_info else None
-    if not total_wins:
-        raise ValidationError("Summoner total wins not found.")
+        total_losses = get_total_losses(ranked_info) if ranked_info else None
+        if not total_losses:
+            raise ValidationError("Summoner total losses not found.")
+        #print(total_losses)
+        
+    
+    except requests.exceptions.RequestException as e:
+        # This captures any network related errors
+        raise ValidationError(f"Network error occurred: {str(e)}")
 
-    total_losses = get_total_losses(ranked_info) if ranked_info else None
-    if not total_losses:
-        raise ValidationError("Summoner total losses not found.")
+    except Exception as e:
+        # General exception for any other errors
+        raise ValidationError(f"An unexpected error occurred: {str(e)}")
 
     summ_info = {
         'summoner_name': summoner_name,
@@ -118,43 +135,47 @@ def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key):
         'total_wins': total_wins,
         'total_losses': total_losses,
         'rank': rank,
-        'tier': tier
+        'tier': tier,
+        'profile_icon': profile_icon
     }
-
+    #print(summ_info)
     validate_summoner_data(summ_info)
 
     return summ_info
 
 def save_summoner_info(summoner_puuid, summ_info):
-    try:
-        existing_summoner = Summoner.objects.get(puuid=summoner_puuid)
-        needs_update = any([
-            existing_summoner.summoner_name != summ_info['summoner_name'],
-            existing_summoner.summoner_tag != summ_info['summoner_tag'],
-            existing_summoner.region != summ_info['region'],
-            existing_summoner.summoner_id != summ_info['summoner_id'],
-            existing_summoner.puuid != summ_info['puuid'],
-            existing_summoner.league_points != summ_info['league_points'],
-            existing_summoner.total_wins != summ_info['total_wins'],
-            existing_summoner.total_losses != summ_info['total_losses'],
-            existing_summoner.rank != summ_info['rank'],
-            existing_summoner.tier != summ_info['tier'],
-        ])
-    except Summoner.DoesNotExist:
-        existing_summoner = None
-        needs_update = True
+    with transaction.atomic():
+        try:
+            existing_summoner = Summoner.objects.get(puuid=summoner_puuid)
+            needs_update = any([
+                existing_summoner.summoner_name != summ_info['summoner_name'],
+                existing_summoner.summoner_tag != summ_info['summoner_tag'],
+                existing_summoner.region != summ_info['region'],
+                existing_summoner.summoner_id != summ_info['summoner_id'],
+                existing_summoner.puuid != summ_info['puuid'],
+                existing_summoner.league_points != summ_info['league_points'],
+                existing_summoner.total_wins != summ_info['total_wins'],
+                existing_summoner.total_losses != summ_info['total_losses'],
+                existing_summoner.rank != summ_info['rank'],
+                existing_summoner.tier != summ_info['tier'],
+                existing_summoner.profile_icon != summ_info['profile_icon']
+            ])
+        except Summoner.DoesNotExist:
+            existing_summoner = None
+            needs_update = True
 
-    if needs_update:
-        summoner, _ = Summoner.objects.update_or_create(
-            puuid=summoner_puuid,
-            defaults=summ_info
-        )
-        return summoner
-    else:
-        return existing_summoner
+        if needs_update:
+            summoner, _ = Summoner.objects.update_or_create(
+                puuid=summoner_puuid,
+                defaults=summ_info
+            )
+            return summoner
+        else:
+            return existing_summoner
 
 def get_summoner_stats(summoner, match_id, api_key):
     #print(match_id)
+    #print(summoner)
     match_data = get_match_data(match_id, summoner.region, api_key)
     #print(match_data)
     if match_data:
@@ -193,122 +214,101 @@ def get_summoner_stats(summoner, match_id, api_key):
     
 
 def send_time_info(match_id, api_key, summoner_name):
-    #print(match_id)
-    #print(api_key)
-    #print(summoner_name)
     try:
-        summoner = Summoner.objects.filter(summoner_name=summoner_name).first()
-        if not summoner:
-            print(f"No summoner found with name {summoner_name}")
-    except Exception as e:
-        print(f"Error retrieving summoner: {str(e)}")
-    try:
-        time_info = get_time_info(match_id, api_key, summoner.region)
-        #print(time_info)
-        if not time_info:
-            print(f"No time info available for match {match_id}")
-            return None
-    except Exception as e:
-        print(f"Error retrieving time info: {str(e)}")
-        return None
-
-    try:
+        summoner = Summoner.objects.get(summoner_name=summoner_name)
         match_data = get_match_data(match_id, summoner.region, api_key)
-        if not match_data:
-            print(f"No match data available for match {match_id}")
-            return None
         participants = get_participants(match_data)
-        if not participants:
-            print(f"No participants available for match {match_id}")
-            return None
         summoner_index = get_summoner_index(participants, summoner.puuid)
-        if not summoner_index:
-            print(f"No summoner index available for match {match_id}")
-            return None
+        time_info = get_time_info(match_id, api_key, summoner.region)
+
+        if not time_info:
+            logger.error(f"No time info available for match {match_id}")
+            raise ValueError("No time info available for match {}".format(match_id))
+
         minutes = [int(minute) for minute in get_match_minutes(time_info)]
-        if not minutes:
-            print(f"No minutes available for match {match_id}")
-            return None
-    except Exception as e:
-        print(f"Error processing match data: {str(e)}")
-    
-    match = Match.objects.filter(api_match_id=match_id).first() 
-    all_match_time_info = []
-    try:
-        for min in minutes:
-            try:
+        match = Match.objects.filter(api_match_id = match_id).first()
+        all_match_time_info = []
+
+        with transaction.atomic():
+            for min in minutes:
                 summoner_time_info = time_info[min]['participantFrames'][str(summoner_index)]
-                #print(summoner_time_info)
-                #print(summoner_time_info['damageStats']['totalDamageDone'])
                 match_time_info = {
-                    'match_id': match.id,
+                    'match_id': int(match.id),
+                    'summoner_id': summoner.id,
                     'damageDone': summoner_time_info['damageStats']['totalDamageDone'],
                     'damageTaken': summoner_time_info['damageStats']['totalDamageTaken'],
                     'gold': summoner_time_info['totalGold'],
                     'xp': summoner_time_info['xp'],
                     'minions': summoner_time_info['minionsKilled'],
                     'level': summoner_time_info['level'],
-                    'minuto': min
+                    'minute': min
                 }
-                #print(match_time_info)
+                logger.debug(f"Processing minute {min}: {match_time_info}")
                 validate_time_info(match_time_info)
                 all_match_time_info.append(match_time_info)
-            except Exception as e:
-                print(f"Error during processing time info for minuto {min}: {str(e)}")
-                continue
+        #print(all_match_time_info)
+        return all_match_time_info
+
+    except Summoner.DoesNotExist:
+        logger.exception("Summoner not found with name {}".format(summoner_name))
+        raise ValueError("Summoner not found with name {}".format(summoner_name))
+    except KeyError as e:
+        logger.exception("Key error in processing time info: {}".format(e))
+        raise ValueError("Key error in processing time info: {}".format(e))
     except Exception as e:
-        print(f"General error in processing time data: {str(e)}")
-        return None
-
-    if all_match_time_info:
-        try:
-            save_time_info(match, all_match_time_info)
-        except Exception as e:
-            print(f"Error saving time info: {str(e)}")
-            return None
-
-    return all_match_time_info
+        logger.exception("An unexpected error occurred: {}".format(e))
+        raise SystemError("An unexpected error occurred: {}".format(e))
 
 
 def save_matches_stats(summoner, match_id, summoner_data):
-    #print(summoner_data)
-    #print(summoner)
-    #print(match_id)
-    match_instance, _ = Match.objects.update_or_create(
-        summoner_id=summoner, api_match_id=match_id
-    )
+    print(f"League of Data: Guardando los datos de {summoner.summoner_name} en la base de datos.")
+    with transaction.atomic():
+        match_instance, _ = Match.objects.update_or_create(
+            summoner_id=summoner, api_match_id=match_id
+        )
 
-    Graphic_data.objects.update_or_create(
-        summoner_id=summoner,
-        match_id=match_instance,
-        defaults={
-            'kills': summoner_data['kills'],
-            'deaths': summoner_data['deaths'],
-            'assists': summoner_data['assists'],
-            'championName': summoner_data['championName'],
-            'goldEarned': summoner_data['goldEarned'],
-            'totalDamageDealt': summoner_data['totalDamageDealt'],
-            'totalDamageTaken': summoner_data['totalDamageTaken'],
-            'role': summoner_data['role'],
-            'lane': summoner_data['lane'],
-            'win': summoner_data['win'],
-        }
-    )
-
-def save_time_info(match_instance, time_info):
-    for minute_info in time_info:
-        Time_info.objects.update_or_create(
+        Graphic_data.objects.update_or_create(
+            summoner_id=summoner,
             match_id=match_instance,
-            minute=minute_info['minuto'],
             defaults={
-                'damageDone': minute_info['damageDone'],
-                'damageTaken': minute_info['damageTaken'],
-                'gold': minute_info['gold'],
-                'xp': minute_info['xp'],
-                'minions': minute_info['minions'],
-                'level': minute_info['level']
+                'kills': summoner_data['kills'],
+                'deaths': summoner_data['deaths'],
+                'assists': summoner_data['assists'],
+                'championName': summoner_data['championName'],
+                'goldEarned': summoner_data['goldEarned'],
+                'totalDamageDealt': summoner_data['totalDamageDealt'],
+                'totalDamageTaken': summoner_data['totalDamageTaken'],
+                'role': summoner_data['role'],
+                'lane': summoner_data['lane'],
+                'win': summoner_data['win'],
             }
         )
+
+def save_time_info(match_id, time_data, summoner):
+    for time in time_data:
+        with transaction.atomic():
+            match_instance = Match.objects.get(api_match_id=match_id)
+            if not match_instance:
+                raise ValueError(f"No Match found with id {match_id}")
+            Time_info.objects.update_or_create(
+                match_id=match_instance,
+                minute=time['minute'],
+                defaults={
+                    'damageDone': time['damageDone'],
+                    'damageTaken': time['damageTaken'],
+                    'gold': time['gold'],
+                    'xp': time['xp'],
+                    'minions': time['minions'],
+                    'level': time['level'],
+                    'summoner_id': summoner
+                }
+            )
+
+def calculate_winrate(summoner):
+    if summoner.total_wins + summoner.total_losses == 0:
+        return 0  # Evita la división por cero si no hay partidas jugadas
+    winrate = (summoner.total_wins / (summoner.total_wins + summoner.total_losses)) * 100
+    return winrate
 
 
     

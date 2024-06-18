@@ -36,6 +36,7 @@ def get_summoner_tag(account_info):
     summoner_tag = account_info['tagLine']
     return summoner_tag
 
+
 def get_summoner_info (summoner_puuid, api_key):
     url_start = "https://"
     url_middle = "la2.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/"
@@ -57,6 +58,10 @@ def get_summoner_info (summoner_puuid, api_key):
     except RequestException as req_err:
         print(f"Request exception occurred: {req_err}")
     return summoner_info
+
+def get_profile_icon (summoner_info):
+    profile_icon = summoner_info['profileIconId']
+    return profile_icon
 
 def get_summoner_id (summoner_info):
     summoner_id = summoner_info['id']
