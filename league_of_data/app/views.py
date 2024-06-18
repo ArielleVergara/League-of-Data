@@ -133,7 +133,7 @@ def plot_image(request, graph_type, summoner_name, match_id):
         #print(time_info)      
         result = generate_graphs(time_info, match_id)
         graph_index = {
-            'daño': 0,
+            'dano': 0,
             'nivel': 1,
             'minions': 2,
             'oro': 3,
