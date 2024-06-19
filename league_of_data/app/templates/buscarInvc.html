@@ -9,39 +9,121 @@
     <p>Ingresa los los datos necesarios para buscar a un Invocador</p>
 
     <div class="p-3">
-        <form id="summonerInfoForm" action="{% url 'get_summoner' %}" method="POST">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <input class="btn btn-primary" type="submit" value="Buscar">
-        </form>
+        <!-- <div class="form-container">
+            <form id="summonerInfoForm" action="{% url 'view_single_summoner' %}" method="POST">
+                {% csrf_token %}
+                {{ form1.as_p }}
+                <input type="hidden" name="form_type" value="summoner_search">
+                <input class="btn btn-primary" type="submit" value="Buscar" id="searchButton">
+            </form>
+        </div>
+        <div class="form-container">
+            <form id="secondSummonerInfoForm" action="{% url 'compare_summoners' %}" method="POST" style="display:none;">
+                {% csrf_token %}
+                {{ form2.as_p }}
+                <input type="hidden" name="form_type" value="second_summoner_search">
+                <input class="btn btn-primary" type="submit" value="Comparar">
+            </form>
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+            <a href="#" id="showSecondForm" class="btn btn-link text-light">Comparación con otro Invocador</a>
+            <a href="#" id="cancelSecondForm" class="btn btn-link text-light" style="display:none;">Cancelar</a>
+        </div> -->
+
+        <div class="form-container">
+                <form id="summonerInfoForm" action="{% url 'view_single_summoner' %}" method="POST">
+                    {% csrf_token %}
+                    {{ form1.as_p }}
+                    <input class="btn btn-primary" type="submit" value="Buscar" id="searchButton">
+                </form>
+        </div>
+        
+
+        <script>
+            document.getElementById('showSecondForm').addEventListener('click', function(event) {
+                event.preventDefault();
+                document.getElementById('secondSummonerInfoForm').style.display = 'block';
+                document.getElementById('searchButton').style.display = 'none';
+                document.getElementById('cancelSecondForm').style.display = 'inline';
+            });
+            document.getElementById('cancelSecondForm').addEventListener('click', function(event) {
+                event.preventDefault();
+                document.getElementById('secondSummonerInfoForm').style.display = 'none';
+                document.getElementById('searchButton').style.display = 'inline-block';
+                document.getElementById('cancelSecondForm').style.display = 'none';
+            });
+        </script>
+
+        <script>
+            document.getElementById('secondSummonerInfoForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                var form1 = document.getElementById('summonerInfoForm');
+                var form2 = document.getElementById('secondSummonerInfoForm');
+
+                if (form1.style.display !== 'none' && form2.style.display !== 'none') {
+                    if (form1.checkValidity() && form2.checkValidity()) {
+                        form1.submit();
+                    } else {
+                        alert('Por favor, completa todos los campos requeridos en ambos formularios.');
+                    }
+                } else {
+                    alert('El segundo formulario no está visible.');
+                }
+            });
+        </script>
+
+        <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script>
             $(document).ready(function(){
+                // Manejar el envío del formulario de un solo invocador
                 $('#summonerInfoForm').submit(function(e){
-                    e.preventDefault(); // Prevent default form submission
+                    e.preventDefault(); // Previene el envío normal del formulario
+                    var formData = $(this).serialize(); // Serializa los datos del formulario
+                    // Realiza la solicitud AJAX
                     $.ajax({
                         type: 'POST',
-                        url: '/get_summoner/', // Adjust if needed
-                        data: $(this).serialize(),
+                        url: '/summoner/summoner_name>/summoner_tag>/summoner_region>/', // Ajusta si es necesario
+                        data: formData,
                         success: function(response){
-                            // Check for the redirectUrl in the response
-                            if(response.redirectUrl) {
-                                window.location.href = response.redirectUrl; // Redirect to the URL
+                            //$('#html-container').html(response);
+                            // window.location.href = 'http://127.0.0.1:8000/summoner/summoner_name/summoner_tag/summoner_region/';
+                             if(response.redirectUrl) {
+                                window.location.href = response.redirectUrl; // Redirige a la URL
                             } else {
-                                // Handle case where no redirectUrl is provided
                                 console.error("No redirect URL provided.");
                             }
                         },
                         error: function(xhr, errmsg, err){
-                            // Handle errors
+                            console.log(xhr.status + ": " + xhr.responseText);
+                        }
+                    });
+                });
+        
+                // Manejar el envío de ambos formularios para comparación
+                $('#secondSummonerInfoForm').submit(function(e){
+                    e.preventDefault(); // Previene el envío normal del formulario
+                    var formData1 = $('#summonerInfoForm').serialize();
+                    var formData2 = $(this).serialize();
+                    var combinedData = formData1 + '&' + formData2;
+                    // Realiza la solicitud AJAX
+                    $.ajax({
+                        type: 'POST',
+                        url: '/get_summoner/', // Ajusta si es necesario
+                        data: combinedData,
+                        success: function(response){
+                            if(response.redirectUrl) {
+                                window.location.href = response.redirectUrl; // Redirige a la URL
+                            } else {
+                                console.error("No redirect URL provided.");
+                            }
+                        },
+                        error: function(xhr, errmsg, err){
                             console.log(xhr.status + ": " + xhr.responseText);
                         }
                     });
                 });
             });
-        </script>
-    
+        </script> -->
+    <br>
     <br>
     <p>
         Los datos obtenidos por League of Data tienen fines estadísticos y

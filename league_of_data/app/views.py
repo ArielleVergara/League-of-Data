@@ -1,30 +1,36 @@
 from django.http import HttpResponse
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
-from .form import summoner_form
-from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
+from .form import summoner_form, summoner_compare_form
+from django.shortcuts import render
 from league_of_data import settings
 from django.http import JsonResponse
 from .services import save_summoner_info, save_matches_stats, send_time_info, validate_summoner, save_time_info, get_summoner_stats, calculate_winrate
-from .models import Summoner, Time_info, Match, Graphic_data
+from .models import Time_info, Match, Graphic_data
 from .graphs_code.graphs_detail import generate_graphs
 import matplotlib.pyplot as plt
 from io import BytesIO
 import traceback
+from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from .graphs_code.fn_data_api import get_match_list, get_match_data, get_summoner_data, get_summoner_index, get_championName, get_kills, get_assists, get_deaths, get_goldEarned, get_totalDamageDealt, get_totalDamageTaken, get_role, get_lane, get_win, get_participants, get_summoner_data, get_participants_info
+from .graphs_code.fn_data_api import get_match_list
 import logging
 
 logger = logging.getLogger(__name__)
 
+if_compare = True
+
 def error_view(request, error_message):
     return render(request, 'error.html', {'error_message': error_message})
 
+def comparar(request):
+    form = summoner_compare_form(prefix='summoner2')
+    return render(request, 'comparacion.html', {'form': form})
+
 def buscarInvc(request):
-  form = summoner_form()
-  return render(request, 'buscarInvc.html', {'form': form})
+    form = summoner_form(prefix='summoner1')
+    return render(request, 'buscarInvc.html', {'form1': form})
 
 def nosotros(request):
     return render(request, 'nosotros.html')
@@ -32,39 +38,120 @@ def nosotros(request):
 def home(request):
     return render(request, 'home.html')
 
-def get_summoner(request):
-    api_key = settings.RIOT_API_KEY
+
+"""def get_summoner(request):
     if request.method == "POST":
-        form = summoner_form(request.POST)
-        if form.is_valid():
-            summoner_name = form.cleaned_data['summoner_name']
-            summoner_tag = form.cleaned_data['summoner_tag']
-            summoner_region = form.cleaned_data['summoner_region']
-            cache_key = f"{summoner_name}_{summoner_tag}_{summoner_region}"
-            try:
-                print(f"League of Data: Buscando datos de cuenta de summoner {summoner_name}")
-                summoner_info = validate_summoner(summoner_name, summoner_tag, summoner_region, api_key)
-                #print(summoner_info)
-                cache.set(cache_key, summoner_info, timeout=3600)
-                summoner = save_summoner_info(summoner_info['puuid'], summoner_info)
-                return JsonResponse({'redirectUrl': f'/data_visualization/{summoner.summoner_name}/{summoner.summoner_tag}/{summoner.region}/'})
-            except Exception as e:
-                return render(request, 'error.html', {'error_message': "No se pudo acceder a la API. Revise las credenciales de la API."})
-            
+        form1 = summoner_form(request.POST, prefix='summoner1')
+        form2 = summoner_form(request.POST, prefix='summoner2')
+        form_type = request.POST.get('form_type')
+
+        if form_type == 'second_summoner_search':
+            if form1.is_valid() and form2.is_valid():
+                summoner_a = {
+                    'name': form1.cleaned_data['summoner_name'],
+                    'tag': form1.cleaned_data['summoner_tag'],
+                    'region': form1.cleaned_data['summoner_region']
+                }
+                summoner_b = {
+                    'name': form2.cleaned_data['summoner_name'],
+                    'tag': form2.cleaned_data['summoner_tag'],
+                    'region': form2.cleaned_data['summoner_region']
+                }
+                print(summoner_a)
+                print(summoner_b)
+                return compare_summoners(request, summoner_a, summoner_b)
+            else:
+                return JsonResponse({'error': 'Ambos formularios deben ser válidos.'}, status=400)
+        elif form_type == 'summoner_search':
+            if form1.is_valid():
+                summoner_name = form1.cleaned_data['summoner_name']
+                summoner_tag = form1.cleaned_data['summoner_tag']
+                summoner_region = form1.cleaned_data['summoner_region']
+                return view_single_summoner(request, summoner_name, summoner_tag, summoner_region)
+            else:
+                return JsonResponse(form1.errors, status=400)
         else:
-            return JsonResponse(form.errors, status=400)
+            return render(request, 'error.html', {'error_message': "Formulario no reconocido."})
+    else:
+        return render(request, 'error.html', {'error_message': "Hubo un error con el envío de información. Intente de nuevo."})"""
+    
+def view_single_summoner(request):
+    #print(summoner_name)
+    form1 = summoner_form(request.POST, prefix='summoner1')
+    if form1.is_valid():
+        summoner_name = form1.cleaned_data['summoner_name']
+        summoner_tag = form1.cleaned_data['summoner_tag']
+        summoner_region = form1.cleaned_data['summoner_region']
+        context = display_matches(request, summoner_name, summoner_tag, summoner_region)
+        #summoner = context['summoner']
+        #print(summoner.summoner_name)
+        #print("Contexto recibido en view_single_summoner:", context)
+
+        if isinstance(context, HttpResponse):
+            return render(request, 'data_visualization.html', context)
+
+        if 'error_message' in context:
+            return render(request, 'error.html', {'error_message': context['error_message']})
+        
+        # Verificar que todas las claves necesarias están en el contexto
+        if 'summoner' in context and 'match_details' in context and 'winrate' in context:
+            #print(context)
+            return render(request, 'data_visualization.html', context)
+        else:
+            print("Faltan datos en el contexto:", context)
+            return render(request, 'error.html', {'error_message': "Faltan datos para renderizar la página correctamente."})
+    else:
+        return render(request, 'error.html', {'error_message': "Hubo un error con el envío de información. Intente de nuevo."})
+    
+def compare_summoners(request):
+    form = summoner_compare_form(request.POST, prefix='summoner2')
+    if form.is_valid():
+        summoner_a = {
+            'name': form.cleaned_data['summoner1_name'],
+            'tag': form.cleaned_data['summoner1_tag'],
+            'region': form.cleaned_data['summoner1_region']
+        }
+        summoner_b = {
+            'name': form.cleaned_data['summoner2_name'],
+            'tag': form.cleaned_data['summoner2_tag'],
+            'region': form.cleaned_data['summoner2_region']
+        }
+        print(summoner_a)
+        print(summoner_b)
+
+        try:
+            summoner_a = display_matches(request, summoner_a['name'], summoner_a['tag'], summoner_a['region'])
+            #print(summoner_a)
+            summoner_b = display_matches(request, summoner_b['name'], summoner_b['tag'], summoner_b['region'])
+            #print(summoner_b)
+            if 'error_message' in summoner_a:
+                raise Exception(summoner_a['error_message'])
+            if 'error_message' in summoner_b:
+                raise Exception(summoner_b['error_message'])
+            
+            context = {
+                'summonerA': summoner_a,
+                'summonerB': summoner_b
+            }
+            #print(context)
+            return render(request, 'ver_comparacion.html', context)
+        except Exception as e:
+            return render(request, 'error.html', {'error_message': str(e)})
+    else:
+                return JsonResponse({'error': 'Ambos formularios deben ser válidos.'}, status=400)
+    
 
 def display_matches(request, summoner_name, summoner_tag, summoner_region):
     try:
-        
         summoner = get_or_create_summoner(summoner_name, summoner_tag, summoner_region)
         #print(summoner)
         handle_new_matches_and_time_info(summoner)
         context = build_display_context(summoner)
-        return render(request, 'data_visualization.html', context)
+        if context:
+            return context
+        else: print("No existe context.")
     except ValidationError as e:
         return render(request, 'error.html', {'error_message': str(e)})
-
     except Exception as e:
         logger.error(f"An error occurred in display_matches: {e}", exc_info=True)
         return render(request, 'error.html', {'error_message': "Ocurrió un error inesperado. Intente de nuevo."})
@@ -95,6 +182,7 @@ def handle_new_matches_and_time_info(summoner):
 def build_display_context(summoner):
     print(f"League of Data: Compilando todos los datos de summoner {summoner.summoner_name} para visualización.")
     winrate = calculate_winrate(summoner)
+    #print(winrate)
     matches = Match.objects.filter(summoner_id=summoner)
     
     match_details = []
@@ -155,3 +243,4 @@ def plot_image(request, graph_type, summoner_name, match_id):
     except Exception as e:
         trace = traceback.format_exc()
         return HttpResponse(f"An error occurred: {str(e)}\nTraceback:\n{trace}", status=500)
+    

@@ -2,8 +2,6 @@ import matplotlib
 matplotlib.use('Agg')
 import pandas as pd
 import matplotlib.pyplot as plt
-import pandas as pd
-import matplotlib.pyplot as plt
 
 def extract_data(time_info):
     sorted_time_info = sorted(time_info, key=lambda x: (x.match_id.id, x.minute))

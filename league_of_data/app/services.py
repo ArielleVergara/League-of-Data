@@ -1,16 +1,11 @@
 from django.db import transaction
 from .models import Summoner, Match, Graphic_data, Time_info
-from league_of_data import settings
 from .graphs_code.fn_data_api import (
-    get_summoner_puuid, get_account_info, get_summoner_name, get_summoner_info, get_match_minutes, get_list_ranked_info, get_ranked_info,
-    get_match_list, get_match_data, get_summoner_index, get_summoner_data,
+    get_summoner_puuid, get_account_info, get_summoner_info, get_match_minutes, get_list_ranked_info, get_ranked_info,
+    get_match_data, get_summoner_index, get_summoner_data,
     get_summoner_id, get_league_points, get_total_wins, get_total_losses, get_rank, get_tier,
-    get_kills, get_deaths, get_assists, get_goldEarned, get_totalDamageDealt, get_championId, get_championName,
-    get_goldSpent, get_totalDamageTaken, get_totalHeal, get_totalHealsOnTeammates, get_totalMinionsKilled,
-    get_totalTimeSpentDead, get_unitsHealed, get_visionScore, get_spell1Cast, get_spell2Cast, get_spell3Cast, get_spell4Cast,
-    get_doubleKills, get_tripleKills, get_firstBloodAssist, get_firstBloodKill, get_individualPosition, 
-    get_gameEndedInEarlySurrender, get_gameEndedInSurrender, get_wardKilled, get_wardsPlaced, get_role, get_lane, 
-    get_participantId, get_win, get_timePlayed, get_killingSprees, get_longestTimeSpentLiving, get_match_minutes, get_time_info, 
+    get_kills, get_deaths, get_assists, get_goldEarned, get_totalDamageDealt, get_championName,
+    get_totalDamageTaken, get_role, get_lane, get_win, get_match_minutes, get_time_info, 
     get_participants, get_participants_info, get_profile_icon
 )
 from django.core.exceptions import ValidationError
