@@ -1,17 +1,15 @@
 from django.http import HttpResponse
 from django.template import loader
-from django.views.decorators.csrf import csrf_exempt
 from .form import summoner_form, summoner_compare_form
 from django.shortcuts import render
 from league_of_data import settings
 from django.http import JsonResponse
 from .services import save_summoner_info, save_matches_stats, send_time_info, validate_summoner, save_time_info, get_summoner_stats, calculate_winrate
 from .models import Time_info, Match, Graphic_data
-from .graphs_code.graphs_detail import generate_graphs
+from .graphs_code.graphs_detail import generate_graphs, compare_graphs
 import matplotlib.pyplot as plt
 from io import BytesIO
 import traceback
-from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from .graphs_code.fn_data_api import get_match_list
@@ -38,42 +36,6 @@ def nosotros(request):
 def home(request):
     return render(request, 'home.html')
 
-
-"""def get_summoner(request):
-    if request.method == "POST":
-        form1 = summoner_form(request.POST, prefix='summoner1')
-        form2 = summoner_form(request.POST, prefix='summoner2')
-        form_type = request.POST.get('form_type')
-
-        if form_type == 'second_summoner_search':
-            if form1.is_valid() and form2.is_valid():
-                summoner_a = {
-                    'name': form1.cleaned_data['summoner_name'],
-                    'tag': form1.cleaned_data['summoner_tag'],
-                    'region': form1.cleaned_data['summoner_region']
-                }
-                summoner_b = {
-                    'name': form2.cleaned_data['summoner_name'],
-                    'tag': form2.cleaned_data['summoner_tag'],
-                    'region': form2.cleaned_data['summoner_region']
-                }
-                print(summoner_a)
-                print(summoner_b)
-                return compare_summoners(request, summoner_a, summoner_b)
-            else:
-                return JsonResponse({'error': 'Ambos formularios deben ser válidos.'}, status=400)
-        elif form_type == 'summoner_search':
-            if form1.is_valid():
-                summoner_name = form1.cleaned_data['summoner_name']
-                summoner_tag = form1.cleaned_data['summoner_tag']
-                summoner_region = form1.cleaned_data['summoner_region']
-                return view_single_summoner(request, summoner_name, summoner_tag, summoner_region)
-            else:
-                return JsonResponse(form1.errors, status=400)
-        else:
-            return render(request, 'error.html', {'error_message': "Formulario no reconocido."})
-    else:
-        return render(request, 'error.html', {'error_message': "Hubo un error con el envío de información. Intente de nuevo."})"""
     
 def view_single_summoner(request):
     #print(summoner_name)
@@ -116,9 +78,10 @@ def compare_summoners(request):
             'tag': form.cleaned_data['summoner2_tag'],
             'region': form.cleaned_data['summoner2_region']
         }
-        print(summoner_a)
-        print(summoner_b)
-
+        #print(summoner_a)
+        #print(summoner_b)
+        cache_key = f"compare_{summoner_a['name']}_{summoner_b['name']}"
+        context = cache.get(cache_key)
         try:
             summoner_a = display_matches(request, summoner_a['name'], summoner_a['tag'], summoner_a['region'])
             #print(summoner_a)
@@ -134,6 +97,7 @@ def compare_summoners(request):
                 'summonerB': summoner_b
             }
             #print(context)
+            cache.set(cache_key, context, timeout=3600)
             return render(request, 'ver_comparacion.html', context)
         except Exception as e:
             return render(request, 'error.html', {'error_message': str(e)})
@@ -244,3 +208,33 @@ def plot_image(request, graph_type, summoner_name, match_id):
         trace = traceback.format_exc()
         return HttpResponse(f"An error occurred: {str(e)}\nTraceback:\n{trace}", status=500)
     
+def plot_compare(request, summoner_a, summoner_b, graph_type):
+    cache_key = f"compare_{summoner_a['name']}_{summoner_b['name']}"
+    context = cache.get(cache_key)
+    print(context)
+    if context is None:
+        return HttpResponse("No se encontró información en caché para estos summoners.", status=404)
+    try:
+        result = compare_graphs(context)
+        graph_index = {
+            'winrate': 0,
+            'role': 1,
+            'lane': 2,
+            'champion': 3
+        }.get(graph_type, None)
+
+        if graph_index is None:
+            print("Invalid graph type")
+            return HttpResponse("Invalid graph type.", status=400)
+
+        fig = result[graph_index]
+        buf = BytesIO()
+        fig.savefig(buf, format="png")
+        plt.close(fig)
+        response = HttpResponse(buf.getvalue(), content_type="image/png")
+        response['Content-Length'] = str(len(response.content))
+        return response
+    except Exception as e:
+        trace = traceback.format_exc()
+        return HttpResponse(f"An error occurred: {str(e)}\nTraceback:\n{trace}", status=500)
+    return request

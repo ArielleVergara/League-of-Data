@@ -1,17 +1,25 @@
 {% extends 'base.html' %}
 
 {% block contenido %}
-<div>
+<div class="p-5 text-light">
     <h2>Comparación de Jugadores</h2>
-    <div>
-        <h3>{{ summonerA.summoner.summoner_name }} </h3>
-        <p></p>
-        <!-- Más estadísticas y gráficos -->
-    </div>
-    <div>
-        <h3>{{ summonerB.summoner.summoner_name }} </h3>
-        <p></p>
-        <!-- Más estadísticas y gráficos -->
+    <div class="grid-container">
+        <div class="grid-item">
+            <h3>{{ summonerA.summoner.summoner_name }}</h3>
+            <p></p>
+            <!-- Más estadísticas y gráficos -->
+        </div>
+        <div class="grid-item">
+            <h3>VS.</h3>
+            <p><img class="graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='winrate' %}" alt="Gráfico de winrate"></p>
+            <!-- Más estadísticas y gráficos -->
+        </div>
+        <div class="grid-item">
+            <h3>{{ summonerB.summoner.summoner_name }}</h3>
+            <p></p>
+            <!-- Más estadísticas y gráficos -->
+        </div>
     </div>
 </div>
 {% endblock %}
+

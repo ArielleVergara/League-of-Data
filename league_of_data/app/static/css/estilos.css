@@ -74,3 +74,13 @@ body::before {
     display: block;
     margin: auto; /* Centrar la imagen horizontalmente */
 }
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* Define dos columnas de igual tamaño */
+    gap: 20px; /* Espacio entre las columnas */
+  }
+  .grid-item {
+    background-color: #142431;
+    /* Estilos adicionales para cada ítem si es necesario */
+  }

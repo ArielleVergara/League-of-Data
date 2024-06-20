@@ -9,25 +9,6 @@
     <p>Ingresa los los datos necesarios para buscar a un Invocador</p>
 
     <div class="p-3">
-        <!-- <div class="form-container">
-            <form id="summonerInfoForm" action="{% url 'view_single_summoner' %}" method="POST">
-                {% csrf_token %}
-                {{ form1.as_p }}
-                <input type="hidden" name="form_type" value="summoner_search">
-                <input class="btn btn-primary" type="submit" value="Buscar" id="searchButton">
-            </form>
-        </div>
-        <div class="form-container">
-            <form id="secondSummonerInfoForm" action="{% url 'compare_summoners' %}" method="POST" style="display:none;">
-                {% csrf_token %}
-                {{ form2.as_p }}
-                <input type="hidden" name="form_type" value="second_summoner_search">
-                <input class="btn btn-primary" type="submit" value="Comparar">
-            </form>
-
-            <a href="#" id="showSecondForm" class="btn btn-link text-light">Comparación con otro Invocador</a>
-            <a href="#" id="cancelSecondForm" class="btn btn-link text-light" style="display:none;">Cancelar</a>
-        </div> -->
 
         <div class="form-container">
                 <form id="summonerInfoForm" action="{% url 'view_single_summoner' %}" method="POST">
@@ -56,12 +37,12 @@
         <script>
             document.getElementById('secondSummonerInfoForm').addEventListener('submit', function(event) {
                 event.preventDefault();
-                var form1 = document.getElementById('summonerInfoForm');
-                var form2 = document.getElementById('secondSummonerInfoForm');
+                var form = document.getElementById('summonerInfoForm');
 
-                if (form1.style.display !== 'none' && form2.style.display !== 'none') {
-                    if (form1.checkValidity() && form2.checkValidity()) {
-                        form1.submit();
+
+                if (form.style.display !== 'none' && form.style.display !== 'none') {
+                    if (form.checkValidity()) {
+                        form.submit();
                     } else {
                         alert('Por favor, completa todos los campos requeridos en ambos formularios.');
                     }

@@ -95,3 +95,6 @@ def generate_graphs(time_info, match_id):
     print(f"League of Data: Los datos están listos para visualizar.")
     return plt_daño, plt_nivel, plt_minions, plt_oro,plt_exp
     
+def compare_graphs(info):
+    graphs = info
+    return graphs
