@@ -23,6 +23,11 @@
                 <h2 class="accordion-header" id="heading{{ detail.match.api_match_id }}">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ detail.match.api_match_id }}" aria-expanded="false" aria-controls="collapse{{ detail.match.api_match_id }}">
                         <img src="https://ddragon.leagueoflegends.com/cdn/14.12.1/img/champion/{{ detail.graphic_data.championName }}.png">
+                        {% if detail.graphic_data.win == True %}
+                            <p> Ganada</p>
+                        {% else %}
+                            <p> Perdida</p>
+                        {% endif %}
                     </button>
                 </h2>
                 <div id="collapse{{ detail.match.api_match_id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ detail.match.api_match_id }}" data-bs-parent="#matchAccordion">

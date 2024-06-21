@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 #import seaborn as sns
 
+
 def extract_data(time_info):
     sorted_time_info = sorted(time_info, key=lambda x: (x.match_id.id, x.minute))
     data_list = []
@@ -38,7 +39,7 @@ def generate_graphs(time_info, match_id):
             plt.plot(df['minuto'], df['damageTaken'], color="r", label='Daño Recibido')
             plt.xlabel('Tiempo (min)')
             plt.ylabel('Daño')
-            plt.title('Daño Hecho por Minuto')
+            plt.title('Daño Hecho al Minuto')
             plt.legend()
             plt.grid()
             matplotlib.pyplot.close()
@@ -62,7 +63,7 @@ def generate_graphs(time_info, match_id):
             plt.plot(df['minuto'], df['minions'], color="r", label='Minions')
             plt.xlabel('Tiempo (min)')
             plt.ylabel('Minions')
-            plt.title('Minions por minuto')
+            plt.title('Minions al minuto')
             plt.grid()
             matplotlib.pyplot.close()
         except:
@@ -74,7 +75,7 @@ def generate_graphs(time_info, match_id):
             plt.plot(df['minuto'], df['gold'], color="r", label='Oro')
             plt.xlabel('Tiempo (min)')
             plt.ylabel('Oro')
-            plt.title('Oro por minuto')
+            plt.title('Oro al minuto')
             plt.grid()
             matplotlib.pyplot.close()
         except:
@@ -85,7 +86,7 @@ def generate_graphs(time_info, match_id):
             plt.plot(df['minuto'], df['xp'], color="r", label='Experiencia')
             plt.xlabel('Tiempo (min)')
             plt.ylabel('Experiencia')
-            plt.title('Experiencia por minuto')
+            plt.title('Experiencia al minuto')
             plt.grid()
             matplotlib.pyplot.close()
         except:
@@ -100,14 +101,15 @@ def compare_graphs(info):
     #print(info)
     if info:
         try:
-            summoner_a = info['summonerA']['match_details']
+            summonerA_totalLosses = info['summonerA']['summoner'].total_losses
+            summonerA_totalWins = info['summonerA']['summoner'].total_wins
+            summonerA_matchDetails = info['summonerA']['match_details']
             #print(summoner_a)
             champions_a = []
             roles_a = []
             lanes_a = []
-            totalLosses_a = []
-            totalWins_a = []
-            for match in summoner_a:
+            
+            for match in summonerA_matchDetails:
                 graphic_data = match['graphic_data']
                 champion = graphic_data.championName
                 if champion:
@@ -118,20 +120,15 @@ def compare_graphs(info):
                 lane = graphic_data.lane
                 if lane:
                     lanes_a.append(lane)
-                totalLosses = graphic_data.totalLosses
-                if totalLosses:
-                    totalLosses_a.append(totalLosses)
-                totalWins = graphic_data.totalWins
-                if totalWins:
-                    totalWins_a.append(totalWins)
-            
-            summoner_b = info['summonerB']['match_details']
+                
+            summonerB_totalLosses = info['summonerB']['summoner'].total_losses
+            summonerB_totalWins = info['summonerB']['summoner'].total_wins
+            summonerB_matchDetails = info['summonerB']['match_details']
             champions_b = []
             roles_b = []
             lanes_b = []
-            totalLosses_b = []
-            totalWins_b = []
-            for match in summoner_b:
+
+            for match in summonerB_matchDetails:
                 graphic_data = match['graphic_data']
                 champion = graphic_data.championName
                 if champion:
@@ -142,25 +139,20 @@ def compare_graphs(info):
                 lane = graphic_data.lane
                 if lane:
                     lanes_b.append(lane)
-                totalLosses = graphic_data.totalLosses
-                if totalLosses:
-                    totalLosses_b.append(totalLosses)
-                totalWins = graphic_data.totalWins
-                if totalWins:
-                    totalWins_b.append(totalWins)
+                    
             #all_champions = champions_a + champions_b
-
-            df_champions_a = pd.DataFrame(champions_a, columns=['Champion'])
-            df_champions_b = pd.DataFrame(champions_b, columns=['Champion'])
-
-            champion_counts_a = df_champions_a['Champion'].value_counts().reset_index()
-            champion_counts_a.columns = ['Champion', 'CountA']
-            champion_counts_b = df_champions_b['Champion'].value_counts().reset_index()
-            champion_counts_b.columns = ['Champion', 'CountB']
-            champion_counts = pd.merge(champion_counts_a, champion_counts_b, on='Champion', how='outer').fillna(0)
-            #print(champion_counts)
-            
             try:
+                df_champions_a = pd.DataFrame(champions_a, columns=['Champion'])
+                df_champions_b = pd.DataFrame(champions_b, columns=['Champion'])
+            
+
+                champion_counts_a = df_champions_a['Champion'].value_counts().reset_index()
+                champion_counts_a.columns = ['Champion', 'CountA']
+                champion_counts_b = df_champions_b['Champion'].value_counts().reset_index()
+                champion_counts_b.columns = ['Champion', 'CountB']
+                champion_counts = pd.merge(champion_counts_a, champion_counts_b, on='Champion', how='outer').fillna(0)
+                #print(champion_counts)
+            
                 plt_champions = plt.figure(figsize=(10, 6))
                 plt.barh(champion_counts['Champion'], champion_counts['CountA'], color="g", label='Invocador A')
                 plt.barh(champion_counts['Champion'], champion_counts['CountB'], color="r", label='Invocador B')

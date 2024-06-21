@@ -46,7 +46,8 @@ def view_single_summoner(request):
         #print(summoner_tag)
         summoner_region = form.cleaned_data['summoner_region']
         #print(summoner_region)
-        context = display_matches(request, summoner_name, summoner_tag, summoner_region)
+        summoner_server = form.cleaned_data['summoner_server']
+        context = display_matches(request, summoner_name, summoner_tag, summoner_region, summoner_server)
 
         if 'error_message' in context:
             return render(request, 'error.html', {'error_message': context['error_message']})
@@ -61,21 +62,23 @@ def compare_summoners(request):
         summoner_a = {
             'name': form.cleaned_data['summoner1_name'],
             'tag': form.cleaned_data['summoner1_tag'],
-            'region': form.cleaned_data['summoner1_region']
+            'region': form.cleaned_data['summoner1_region'],
+            'server': form.cleaned_data['summoner1_server']
         }
         summoner_b = {
             'name': form.cleaned_data['summoner2_name'],
             'tag': form.cleaned_data['summoner2_tag'],
-            'region': form.cleaned_data['summoner2_region']
+            'region': form.cleaned_data['summoner2_region'],
+            'server': form.cleaned_data['summoner2_server']
         }
         #print(summoner_a)
         #print(summoner_b)
         cache_key = f"compare_{summoner_a['name']}_{summoner_b['name']}"
         context = cache.get(cache_key)
         try:
-            summoner_a = display_matches(request, summoner_a['name'], summoner_a['tag'], summoner_a['region'])
+            summoner_a = display_matches(request, summoner_a['name'], summoner_a['tag'], summoner_a['region'], summoner_a['server'])
             #print(summoner_a)
-            summoner_b = display_matches(request, summoner_b['name'], summoner_b['tag'], summoner_b['region'])
+            summoner_b = display_matches(request, summoner_b['name'], summoner_b['tag'], summoner_b['region'], summoner_b['server'])
             #print(summoner_b)
             if 'error_message' in summoner_a:
                 raise Exception(summoner_a['error_message'])
@@ -95,9 +98,9 @@ def compare_summoners(request):
                 return JsonResponse({'error': 'Ambos formularios deben ser válidos.'}, status=400)
     
 
-def display_matches(request, summoner_name, summoner_tag, summoner_region):
+def display_matches(request, summoner_name, summoner_tag, summoner_region, summoner_server):
     try:
-        summoner = get_or_create_summoner(summoner_name, summoner_tag, summoner_region)
+        summoner = get_or_create_summoner(summoner_name, summoner_tag, summoner_region, summoner_server)
         #print(summoner)
         handle_new_matches_and_time_info(summoner)
         context = build_display_context(summoner)
@@ -110,10 +113,10 @@ def display_matches(request, summoner_name, summoner_tag, summoner_region):
         context['error_message'] = "Ocurrió un error inesperado. Intente de nuevo."
     return context
 
-def get_or_create_summoner(summoner_name, summoner_tag, summoner_region):
+def get_or_create_summoner(summoner_name, summoner_tag, summoner_region, summoner_server):
     print(f"League of Data: Actualizando datos de summoner {summoner_name}.")
     api_key = settings.RIOT_API_KEY
-    summoner_info = validate_summoner(summoner_name, summoner_tag, summoner_region, api_key)
+    summoner_info = validate_summoner(summoner_name, summoner_tag, summoner_region, api_key, summoner_server)
     #print(summoner_info)
     return save_summoner_info(summoner_info['puuid'], summoner_info)
 

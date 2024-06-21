@@ -18,7 +18,7 @@ def validate_summoner_data(summ_info):
 
 
     required_fields = ['summoner_name', 'puuid', 'summoner_tag', 'region', 'summoner_id',
-                        'league_points', 'total_wins', 'total_losses', 'rank', 'tier', 'profile_icon']
+                        'league_points', 'total_wins', 'total_losses', 'rank', 'tier', 'profile_icon', 'server']
     
     if not summ_info:
         raise ValidationError("Account info is missing.")
@@ -59,7 +59,7 @@ def validate_time_info(time_info):
             raise ValidationError(f"Empty or invalid value for required time_info field: {field}")        
     
 
-def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key):
+def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key, summoner_server):
     try:
         account_info = get_account_info(summoner_name, summoner_tag, summoner_region, api_key)
         #print(account_info)
@@ -70,7 +70,7 @@ def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key):
         if not summoner_puuid:
             raise ValidationError("Summoner PUUID not found.")
 
-        summoner_info = get_summoner_info(summoner_puuid, api_key)
+        summoner_info = get_summoner_info(summoner_puuid, api_key, summoner_server)
         if not summoner_info:
             raise ValidationError("Account information could not be retrieved.")
 
@@ -84,7 +84,7 @@ def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key):
             raise ValidationError("Summoner profile icon not found.")
         #print(profile_icon)
 
-        list_ranked_info = get_list_ranked_info(summoner_id, api_key)
+        list_ranked_info = get_list_ranked_info(summoner_id, api_key, summoner_server)
         if not list_ranked_info:
             raise ValidationError("List ranked info could not be retrieved.")
 
@@ -139,7 +139,8 @@ def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key):
         'total_losses': total_losses,
         'rank': rank,
         'tier': tier,
-        'profile_icon': profile_icon
+        'profile_icon': profile_icon,
+        'server': summoner_server
     }
     #print(summ_info)
     validate_summoner_data(summ_info)

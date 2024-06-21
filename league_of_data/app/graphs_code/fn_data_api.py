@@ -37,12 +37,8 @@ def get_summoner_tag(account_info):
     return summoner_tag
 
 
-def get_summoner_info (summoner_puuid, api_key):
-    url_start = "https://"
-    url_middle = "la2.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/"
-    url_finish = "?api_key="
-
-    api_url = f"{url_start}{url_middle}{summoner_puuid}{url_finish}{api_key}"
+def get_summoner_info (summoner_puuid, api_key, summoner_server):
+    api_url = f"https://{summoner_server}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{summoner_puuid}?api_key={api_key}"
     summoner_info = None
 
     try:
@@ -67,13 +63,8 @@ def get_summoner_id (summoner_info):
     summoner_id = summoner_info['id']
     return summoner_id
 
-def get_list_ranked_info (summoner_id, api_key):
-    url_start = "https://"
-    url_middle = "la2.api.riotgames.com/lol/league/v4/entries/by-summoner/"
-    url_finish = "?api_key="
-
-
-    api_url = f"{url_start}{url_middle}{summoner_id}{url_finish}{api_key}"
+def get_list_ranked_info (summoner_id, api_key, summoner_server):
+    api_url = f"https://{summoner_server}.api.riotgames.com/lol/league/v4/entries/by-summoner/{summoner_id}?api_key={api_key}"
 
     list_ranked_info = None
 
@@ -156,7 +147,7 @@ def get_match_data(match_id, region, api_key):
         response = requests.get(api_url)
         if response.status_code == 200:
             try:
-                match_data = response.json()  # Intenta convertir la respuesta a JSON
+                match_data = response.json()
             except ValueError:
                 print(f"Error decoding JSON from response for match ID {match_id}")
                 return None

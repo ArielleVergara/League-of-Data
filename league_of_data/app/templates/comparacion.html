@@ -2,7 +2,8 @@
 
 {% block contenido %}
 <div class="p-5 text-light text-center">
-    <div class="p-3"></div>
+    <h3>Comparación de Invocadores</h3><br>
+    <div class="p-3">
         <div class="form-container">
             <form id="secondSummonerInfoForm" action="{% url 'compare_summoners' %}" method="POST">
                 {% csrf_token %}

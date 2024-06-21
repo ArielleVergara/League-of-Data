@@ -12,6 +12,7 @@ class Summoner (models.Model):
     rank = models.CharField(max_length=255, default=None)
     tier = models.CharField(max_length=255, default=None)
     profile_icon = models.IntegerField (verbose_name= 'ícono de cuenta', default=None)
+    server = models.CharField(max_length=255, default=None)
 
 class Match (models.Model):
     summoner_id = models.ForeignKey(Summoner, on_delete=models.CASCADE)
