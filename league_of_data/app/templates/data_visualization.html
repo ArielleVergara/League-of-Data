@@ -9,7 +9,7 @@
             <p>Error: Nombre del invicador no disponible</p>
         {% endif %}
         <div class="text-center">
-            <p><img src="https://ddragon.leagueoflegends.com/cdn/14.12.1/img/profileicon/{{ summoner.profile_icon }}.png"><br>Perfil</p>
+            <p><img class="mid-img" src="https://ddragon.leagueoflegends.com/cdn/14.12.1/img/profileicon/{{ summoner.profile_icon }}.png"><br>Perfil</p>
             <p>División/Rango: {{ summoner.tier }} {{ summoner.rank }}, {{ summoner.league_points }} LP</p>
             <p>Total Partidas Ganadas: {{ summoner.total_wins }}</p>
             <p>Total Partidas Perdidas: {{ summoner.total_losses }}</p>
@@ -22,11 +22,11 @@
             <div class="accordion-item">
                 <h2 class="accordion-header" id="heading{{ detail.match.api_match_id }}">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ detail.match.api_match_id }}" aria-expanded="false" aria-controls="collapse{{ detail.match.api_match_id }}">
-                        <img src="https://ddragon.leagueoflegends.com/cdn/14.12.1/img/champion/{{ detail.graphic_data.championName }}.png">
+                        <img class="small-img" src="https://ddragon.leagueoflegends.com/cdn/14.12.1/img/champion/{{ detail.graphic_data.championName }}.png">
                         {% if detail.graphic_data.win == True %}
-                            <p class="p-3">Partida Ganada</p>
+                            <p class="p-3 fs-5">Partida Ganada</p>
                         {% else %}
-                            <p class="p-3">Partida Perdida</p>
+                            <p class="p-3 fs-5">Partida Perdida</p>
                         {% endif %}
                     </button>
                 </h2>
