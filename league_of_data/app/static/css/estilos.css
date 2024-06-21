@@ -70,9 +70,7 @@ body::before {
 }
 
 .graph-img {
-    width: 60%; /* Reducir el tamaño original a 60% para hacerlo un 40% más pequeño */
-    display: block;
-    margin: auto; /* Centrar la imagen horizontalmente */
+    align-content: center;
 }
 
 .grid-container {

@@ -1,26 +1,45 @@
 {% extends 'base.html' %}
 
 {% block contenido %}
-<div class="p-5 text-light">
-    <h2>Comparación de Jugadores</h2>
-    <div class="grid-container">
-        <div class="grid-item">
-            <h3>{{ summonerA.summoner.summoner_name }}</h3>
-            <p></p>
-            <!-- Más estadísticas y gráficos -->
+<div class="container p-5 text-light">
+    <h2 class="text-center">Comparación de Jugadores</h2>
+    <div class="row p-5">
+        <!-- Columna para el Jugador A -->
+        <div class="col-md-3">
+            <div>
+                <div class="text-center">
+                    <h3 class="text-white">{{ summonerA.summoner.summoner_name }}</h3>
+                    <p>[Info Jugador A]</p>
+                    <!-- Más estadísticas y gráficos -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna para los Gráficos -->
+        <div class="col-md-6">
+            <div>
+                <div class="text-center">
+                    <h3>VS</h3>
+                    <br>
+                    <h5>Comparación Gráfica</h5>
+                    <img class="img-fluid graph-img mb-3" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='winrate' %}" alt="Gráfico de winrate">
+                    <br>
+                    <br>
+                    <img class="img-fluid graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='champion' %}" alt="Gráfico de champion">
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna para el Jugador B -->
+        <div class="col-md-3">
+            <div>
+                <div class="text-center">
+                    <h3 class="text-white">{{ summonerB.summoner.summoner_name }}</h3>
+                    <p>[Info Jugador B]</p>
+                    <!-- Más estadísticas y gráficos -->
+                </div>
+            </div>
         </div>
     </div>
-    <div class="grid-item">
-        <h3>VS.</h3>
-        <img class="graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='winrate' %}" alt="Gráfico de winrate">
-        <img class="graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='champion' %}" alt="Gráfico de champion">
-    </div>
-    <div class="grid-item">
-        <h3>{{ summonerB.summoner.summoner_name }}</h3>
-        <p></p>
-        <!-- Más estadísticas y gráficos -->
-    </div>
-    
 </div>
 {% endblock %}
-
