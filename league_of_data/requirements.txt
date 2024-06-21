@@ -4,3 +4,4 @@ django
 requests
 pandas
 matplotlib
+seaborn

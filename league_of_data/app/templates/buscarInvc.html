@@ -13,41 +13,21 @@
         <div class="form-container">
                 <form id="summonerInfoForm" action="{% url 'view_single_summoner' %}" method="POST">
                     {% csrf_token %}
-                    {{ form1.as_p }}
+                    {{ form.as_p }}
                     <input class="btn btn-primary" type="submit" value="Buscar" id="searchButton">
                 </form>
         </div>
-        
 
         <script>
-            document.getElementById('showSecondForm').addEventListener('click', function(event) {
-                event.preventDefault();
-                document.getElementById('secondSummonerInfoForm').style.display = 'block';
-                document.getElementById('searchButton').style.display = 'none';
-                document.getElementById('cancelSecondForm').style.display = 'inline';
-            });
-            document.getElementById('cancelSecondForm').addEventListener('click', function(event) {
-                event.preventDefault();
-                document.getElementById('secondSummonerInfoForm').style.display = 'none';
-                document.getElementById('searchButton').style.display = 'inline-block';
-                document.getElementById('cancelSecondForm').style.display = 'none';
-            });
-        </script>
-
-        <script>
-            document.getElementById('secondSummonerInfoForm').addEventListener('submit', function(event) {
+            document.getElementById('summonerInfoForm').addEventListener('submit', function(event) {
                 event.preventDefault();
                 var form = document.getElementById('summonerInfoForm');
-
-
                 if (form.style.display !== 'none' && form.style.display !== 'none') {
                     if (form.checkValidity()) {
                         form.submit();
                     } else {
                         alert('Por favor, completa todos los campos requeridos en ambos formularios.');
                     }
-                } else {
-                    alert('El segundo formulario no está visible.');
                 }
             });
         </script>

@@ -62,6 +62,7 @@ def validate_time_info(time_info):
 def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key):
     try:
         account_info = get_account_info(summoner_name, summoner_tag, summoner_region, api_key)
+        #print(account_info)
         if not account_info:
             raise ValidationError("Account info could not be retrieved.")
         #print(account_info)
@@ -74,6 +75,7 @@ def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key):
             raise ValidationError("Account information could not be retrieved.")
 
         summoner_id = get_summoner_id(summoner_info)
+        #print(summoner_id)
         if not summoner_id:
             raise ValidationError("Summoner ID not found.")
         
@@ -87,29 +89,35 @@ def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key):
             raise ValidationError("List ranked info could not be retrieved.")
 
         ranked_info = get_ranked_info(list_ranked_info) if list_ranked_info else None
+        #print(ranked_info)
         if not ranked_info:
             raise ValidationError("Ranked info could not be retrieved.")
 
         tier = get_tier(ranked_info) if ranked_info else None
+        #print(tier)
         if not tier:
             raise ValidationError("Summoner tier not found.")
 
         rank = get_rank(ranked_info) if ranked_info else None
+        #print(rank)
         if not rank:
             raise ValidationError("Summoner rank not found.")
 
         league_points = get_league_points(ranked_info) if ranked_info else None
+        #print(league_points)
         if not league_points:
             raise ValidationError("Summoner league points not found.")
 
         total_wins = get_total_wins(ranked_info) if ranked_info else None
+        #print(total_wins)
         if not total_wins:
             raise ValidationError("Summoner total wins not found.")
 
         total_losses = get_total_losses(ranked_info) if ranked_info else None
+        #print(total_losses)
         if not total_losses:
             raise ValidationError("Summoner total losses not found.")
-        #print(total_losses)
+        
         
     
     except requests.exceptions.RequestException as e:

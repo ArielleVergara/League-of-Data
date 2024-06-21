@@ -9,7 +9,7 @@ urlpatterns = [
     path('nosotros/', nosotros, name="nosotros"),
     path('plot_image/<str:summoner_name>/<str:match_id>/<str:graph_type>/', plot_image, name='plot_image'),
     path('compare/', compare_summoners, name='compare_summoners'),
-    path('plot_compare/<str:summoner_a>/<str:summoner_b>/<int:graph_type>/', plot_compare, name='plot_compare'),
+    path('plot_compare/<str:summoner_a>/<str:summoner_b>/<str:graph_type>/', plot_compare, name='plot_compare'),
 
 ]
 

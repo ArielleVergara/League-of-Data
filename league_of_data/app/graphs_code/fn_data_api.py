@@ -92,8 +92,10 @@ def get_list_ranked_info (summoner_id, api_key):
     return list_ranked_info
 
 def get_ranked_info (list_ranked_info):
-    ranked_info = list_ranked_info[0]
-    return ranked_info
+    for i in list_ranked_info:
+        if i["queueType"] == "RANKED_SOLO_5x5":
+            ranked_info = i
+            return ranked_info
 
 def get_tier (ranked_info):
     tier = ranked_info['tier']

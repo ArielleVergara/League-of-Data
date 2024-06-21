@@ -28,7 +28,7 @@ def comparar(request):
 
 def buscarInvc(request):
     form = summoner_form(prefix='summoner1')
-    return render(request, 'buscarInvc.html', {'form1': form})
+    return render(request, 'buscarInvc.html', {'form': form})
 
 def nosotros(request):
     return render(request, 'nosotros.html')
@@ -38,30 +38,20 @@ def home(request):
 
     
 def view_single_summoner(request):
-    #print(summoner_name)
-    form1 = summoner_form(request.POST, prefix='summoner1')
-    if form1.is_valid():
-        summoner_name = form1.cleaned_data['summoner_name']
-        summoner_tag = form1.cleaned_data['summoner_tag']
-        summoner_region = form1.cleaned_data['summoner_region']
+    form = summoner_form(request.POST, prefix='summoner1')
+    if form.is_valid():
+        summoner_name = form.cleaned_data['summoner_name']
+        #print(summoner_name)
+        summoner_tag = form.cleaned_data['summoner_tag']
+        #print(summoner_tag)
+        summoner_region = form.cleaned_data['summoner_region']
+        #print(summoner_region)
         context = display_matches(request, summoner_name, summoner_tag, summoner_region)
-        #summoner = context['summoner']
-        #print(summoner.summoner_name)
-        #print("Contexto recibido en view_single_summoner:", context)
-
-        if isinstance(context, HttpResponse):
-            return render(request, 'data_visualization.html', context)
 
         if 'error_message' in context:
             return render(request, 'error.html', {'error_message': context['error_message']})
         
-        # Verificar que todas las claves necesarias están en el contexto
-        if 'summoner' in context and 'match_details' in context and 'winrate' in context:
-            #print(context)
-            return render(request, 'data_visualization.html', context)
-        else:
-            print("Faltan datos en el contexto:", context)
-            return render(request, 'error.html', {'error_message': "Faltan datos para renderizar la página correctamente."})
+        return render(request, 'data_visualization.html', context)
     else:
         return render(request, 'error.html', {'error_message': "Hubo un error con el envío de información. Intente de nuevo."})
     
@@ -111,19 +101,20 @@ def display_matches(request, summoner_name, summoner_tag, summoner_region):
         #print(summoner)
         handle_new_matches_and_time_info(summoner)
         context = build_display_context(summoner)
-        if context:
-            return context
-        else: print("No existe context.")
+        if not context:
+            context['error_message'] = "No se pudo construir el contexto para la visualización."
     except ValidationError as e:
-        return render(request, 'error.html', {'error_message': str(e)})
+        context['error_message'] = str(e)
     except Exception as e:
         logger.error(f"An error occurred in display_matches: {e}", exc_info=True)
-        return render(request, 'error.html', {'error_message': "Ocurrió un error inesperado. Intente de nuevo."})
+        context['error_message'] = "Ocurrió un error inesperado. Intente de nuevo."
+    return context
 
 def get_or_create_summoner(summoner_name, summoner_tag, summoner_region):
     print(f"League of Data: Actualizando datos de summoner {summoner_name}.")
     api_key = settings.RIOT_API_KEY
     summoner_info = validate_summoner(summoner_name, summoner_tag, summoner_region, api_key)
+    #print(summoner_info)
     return save_summoner_info(summoner_info['puuid'], summoner_info)
 
 def handle_new_matches_and_time_info(summoner):
@@ -209,25 +200,25 @@ def plot_image(request, graph_type, summoner_name, match_id):
         return HttpResponse(f"An error occurred: {str(e)}\nTraceback:\n{trace}", status=500)
     
 def plot_compare(request, summoner_a, summoner_b, graph_type):
-    cache_key = f"compare_{summoner_a['name']}_{summoner_b['name']}"
+    cache_key = f"compare_{summoner_a}_{summoner_b}"
     context = cache.get(cache_key)
-    print(context)
+    #print(context)
     if context is None:
         return HttpResponse("No se encontró información en caché para estos summoners.", status=404)
     try:
         result = compare_graphs(context)
-        graph_index = {
-            'winrate': 0,
+        """ graph_index = {
+            'champion': 0,
             'role': 1,
             'lane': 2,
-            'champion': 3
+            'winrate': 3
         }.get(graph_type, None)
 
         if graph_index is None:
             print("Invalid graph type")
-            return HttpResponse("Invalid graph type.", status=400)
+            return HttpResponse("Invalid graph type.", status=400) """
 
-        fig = result[graph_index]
+        fig = result#[graph_index]
         buf = BytesIO()
         fig.savefig(buf, format="png")
         plt.close(fig)

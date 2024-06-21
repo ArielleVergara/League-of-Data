@@ -11,7 +11,7 @@
         </div>
         <div class="grid-item">
             <h3>VS.</h3>
-            <p><img class="graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='winrate' %}" alt="Gráfico de winrate"></p>
+            <img class="graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='champion' %}" alt="Gráfico de champion">
             <!-- Más estadísticas y gráficos -->
         </div>
         <div class="grid-item">
