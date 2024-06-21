@@ -210,18 +210,18 @@ def plot_compare(request, summoner_a, summoner_b, graph_type):
         return HttpResponse("No se encontró información en caché para estos summoners.", status=404)
     try:
         result = compare_graphs(context)
-        """ graph_index = {
-            'champion': 0,
-            'role': 1,
-            'lane': 2,
-            'winrate': 3
+        graph_index = {
+            'winrate': 0,
+            'champion': 1,
+            #'lane': 2,
+            #'lane': 3
         }.get(graph_type, None)
 
         if graph_index is None:
             print("Invalid graph type")
-            return HttpResponse("Invalid graph type.", status=400) """
+            return HttpResponse("Invalid graph type.", status=400)
 
-        fig = result#[graph_index]
+        fig = result[graph_index]
         buf = BytesIO()
         fig.savefig(buf, format="png")
         plt.close(fig)
