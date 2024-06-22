@@ -17,7 +17,7 @@
         </div>
         <br><br>
         {% if match_details %}
-        <div class="accordion" id="matchAccordion">
+        <div class="accordion custom-acc" id="matchAccordion">
             {% for detail in match_details %}
             <div class="accordion-item">
                 <h2 class="accordion-header" id="heading{{ detail.match.api_match_id }}">
@@ -45,11 +45,11 @@
                             <li>Ganada: {{ detail.graphic_data.win }}</li>
                         </ul>
                         <div>
-                            <img class="graph-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='dano' %}" alt="Gráfico de Daño">
-                            <img class="graph-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='exp' %}" alt="Gráfico de Experiencia">
-                            <img class="graph-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='minions' %}" alt="Gráfico de Minions">
-                            <img class="graph-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='nivel' %}" alt="Gráfico de Nivel">
-                            <img class="graph-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='oro' %}" alt="Gráfico de Oro">
+                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='dano' %}" alt="Gráfico de Daño">
+                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='exp' %}" alt="Gráfico de Experiencia">
+                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='minions' %}" alt="Gráfico de Minions">
+                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='nivel' %}" alt="Gráfico de Nivel">
+                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='oro' %}" alt="Gráfico de Oro">
                         </div>
                     </div>
                 </div>
