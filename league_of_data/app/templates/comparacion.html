@@ -2,7 +2,11 @@
 
 {% block contenido %}
 <div class="p-5 text-light text-center">
-    <h3>Comparación de Invocadores</h3><br>
+    <h3>Comparación de Invocadores</h3>
+    <br><br>
+    <p>
+        Ingresa los datos de cada Invocador para Iniciar un Comparación
+    </p>
     <div class="p-3">
         <div class="form-container">
             <form id="secondSummonerInfoForm" action="{% url 'compare_summoners' %}" method="POST">
@@ -13,4 +17,5 @@
         </div>
     </div>
 </div>
+<br><br><br>
 {% endblock %}

@@ -83,6 +83,11 @@ body::before {
     height: 20%;
 }
 
+.large-img{
+    width: 80%;
+    height: 80%;
+}
+
 .grid-container {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr; /* Define dos columnas de igual tamaño */
