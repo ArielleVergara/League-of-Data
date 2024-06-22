@@ -13,11 +13,10 @@ import traceback
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from .graphs_code.fn_data_api import get_match_list
+from .graphs_code.chatGPT_prompt import get_chatgpt_response
 import logging
 
 logger = logging.getLogger(__name__)
-
-if_compare = True
 
 def error_view(request, error_message):
     return render(request, 'error.html', {'error_message': error_message})
@@ -152,12 +151,16 @@ def build_display_context(summoner):
 
         if not time_info:
             time_info = list(Time_info.objects.filter(match_id=match))
-            cache.set(cache_key, time_info, timeout=3600)      
+            cache.set(cache_key, time_info, timeout=3600)
+        chatgpt_graphic_data = get_chatgpt_response(graphic_data)
+        chatgpt_time_info = get_chatgpt_response(time_info)    
         
         match_details.append({
             'match': match,
             'graphic_data': graphic_data,
-            'time_info': time_info
+            'time_info': time_info,
+            'chatgpt_graphic_data': chatgpt_graphic_data,
+            'chatgpt_time_info': chatgpt_time_info
         })   
     
     return {

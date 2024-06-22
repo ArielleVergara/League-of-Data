@@ -1,6 +1,9 @@
 import requests
 from django.core.cache import cache
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.shortcuts import render
 
 
 def get_account_info(summoner_name, summoner_tag, summoner_region, api_key):
@@ -11,6 +14,8 @@ def get_account_info(summoner_name, summoner_tag, summoner_region, api_key):
             url = f"https://{summoner_region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summoner_name}/{summoner_tag}?api_key={api_key}"
             response = requests.get(url)
             response.raise_for_status()
+            if response.status_code != 200:
+                return HttpResponseRedirect(reverse('error_view', args=(response.status_code,)))
             account_info = response.json()
             cache.set(cache_key, account_info, timeout=3600)
             cache.set(f"summoner-name-{summoner_name}", summoner_name, timeout=3600)
@@ -43,7 +48,8 @@ def get_summoner_info (summoner_puuid, api_key, summoner_server):
 
     try:
         resp_summoner = requests.get(api_url)
-        resp_summoner.raise_for_status()
+        if resp_summoner.status_code != 200:
+            return HttpResponseRedirect(reverse('error_view', args=(resp_summoner.status_code,)))
         summoner_info = resp_summoner.json()
     except HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")
@@ -70,7 +76,8 @@ def get_list_ranked_info (summoner_id, api_key, summoner_server):
 
     try:
         resp_ranked = requests.get(api_url)
-        resp_ranked.raise_for_status()
+        if resp_ranked.status_code != 200:
+                return HttpResponseRedirect(reverse('error_view', args=(resp_ranked.status_code,)))
         list_ranked_info = resp_ranked.json()
     except HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")

@@ -9,7 +9,7 @@
             <p>Error: Nombre del invicador no disponible</p>
         {% endif %}
         <div class="text-center">
-            <p><img class="mid-img" src="https://ddragon.leagueoflegends.com/cdn/14.12.1/img/profileicon/{{ summoner.profile_icon }}.png"><br>Perfil</p>
+            <p><img class="mid-img" src="https://ddragon.leagueoflegends.com/cdn/14.12.1/img/profileicon/{{ summoner.profile_icon }}.png"><br></p>
             <p>División/Rango: {{ summoner.tier }} {{ summoner.rank }}, {{ summoner.league_points }} LP</p>
             <p>Total Partidas Ganadas: {{ summoner.total_wins }}</p>
             <p>Total Partidas Perdidas: {{ summoner.total_losses }}</p>
@@ -42,14 +42,19 @@
                             <li>Daño Total Recibido: {{ detail.graphic_data.totalDamageTaken }}</li>
                             <li>Rol: {{ detail.graphic_data.role }}</li>
                             <li>Linea: {{ detail.graphic_data.lane }}</li>
-                            <li>Ganada: {{ detail.graphic_data.win }}</li>
                         </ul>
+                        <div class="analysis-comments">
+                            <p>Análisis de la partida por ChatGPT: {{ detail.chatgpt_graphic_data }}</p>
+                        </div>
                         <div>
                             <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='dano' %}" alt="Gráfico de Daño">
                             <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='exp' %}" alt="Gráfico de Experiencia">
                             <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='minions' %}" alt="Gráfico de Minions">
                             <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='nivel' %}" alt="Gráfico de Nivel">
                             <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='oro' %}" alt="Gráfico de Oro">
+                        </div>
+                        <div class="analysis-comments">
+                            <p>Análisis de la partida por ChatGPT: {{ detail.chatgpt_time_info }}</p>
                         </div>
                     </div>
                 </div>

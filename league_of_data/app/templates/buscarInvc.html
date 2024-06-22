@@ -6,7 +6,7 @@
 
     <h2>Buscar Invocador</h2>
     <br><br>
-    <p>Ingresa los los datos necesarios para buscar a un Invocador</p>
+    <!-- <p>Ingresa los los datos necesarios para buscar a un Invocador</p> -->
 
     <div class="p-3">
 
@@ -14,6 +14,7 @@
                 <form id="summonerInfoForm" action="{% url 'view_single_summoner' %}" method="POST">
                     {% csrf_token %}
                     {{ form.as_p }}
+                    <br>
                     <input class="btn btn-primary" type="submit" value="Buscar" id="searchButton">
                 </form>
         </div>
@@ -86,7 +87,7 @@
         </script> -->
     <br>
     <br>
-    <p>
+    {% comment %} <p>
         Los datos obtenidos por League of Data tienen fines estadísticos y
         se utilizan para generar una visualización detallada
         de las últimas partidas de los jugadores. Estos datos permiten
@@ -98,9 +99,9 @@
         Se recopilan y procesan diversos tipos de datos para crear gráficos
         informativos y detallados que reflejan las últimas partidas de la
         temporada actual
-    </p>
+    </p> {% endcomment %}
     <br>
-    <p>
+    {% comment %} <p>
         Al ofrecer una visualización clara y comprensible de estos datos,
         la aplicación permite a los jugadores identificar patrones y áreas
         de mejora en su juego. Esta información es esencial para aquellos
@@ -108,8 +109,7 @@
         de competencia en League of Legends. Los gráficos y datos detallados
         proporcionan una base sólida para el análisis personal y la comparación
         con otros jugadores.
-    </p>
+    </p> {% endcomment %}
     </div>
-
-</div>    
+    
 {% endblock %}
