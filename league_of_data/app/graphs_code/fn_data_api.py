@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.shortcuts import render
 
 
-def get_account_info(summoner_name, summoner_tag, summoner_region, api_key):
+def get_account_info(request, summoner_name, summoner_tag, summoner_region, api_key):
     cache_key = f"account-info-{summoner_name}-{summoner_tag}-{summoner_region}"
     try:
         account_info = cache.get(cache_key)
@@ -14,14 +14,13 @@ def get_account_info(summoner_name, summoner_tag, summoner_region, api_key):
             url = f"https://{summoner_region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summoner_name}/{summoner_tag}?api_key={api_key}"
             response = requests.get(url)
             response.raise_for_status()
-            if response.status_code != 200:
-                return HttpResponseRedirect(reverse('error_view', args=(response.status_code,)))
             account_info = response.json()
             cache.set(cache_key, account_info, timeout=3600)
             cache.set(f"summoner-name-{summoner_name}", summoner_name, timeout=3600)
         return account_info
     except requests.exceptions.HTTPError as e:
         error_message = f"HTTP error occurred: {e}"
+        return render(request, 'error.html', {'error_message': str(e)})
     except requests.exceptions.ConnectionError:
         error_message = "Connection error occurred"
     except Exception as e:

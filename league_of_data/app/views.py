@@ -46,10 +46,12 @@ def view_single_summoner(request):
         summoner_region = form.cleaned_data['summoner_region']
         #print(summoner_region)
         summoner_server = form.cleaned_data['summoner_server']
-        context = display_matches(request, summoner_name, summoner_tag, summoner_region, summoner_server)
-
-        if 'error_message' in context:
-            return render(request, 'error.html', {'error_message': context['error_message']})
+        try:
+            context = display_matches(request, summoner_name, summoner_tag, summoner_region, summoner_server)
+            chatgpt_graphic_data = get_chatgpt_response(context)
+            context['chatgpt_graphic_data'] = chatgpt_graphic_data
+        except:
+            return render(request, 'error.html', {'error_message': "Hubo un error con la extracción de información de la API. Intente de nuevo."})
         
         return render(request, 'data_visualization.html', context)
     else:
@@ -99,7 +101,7 @@ def compare_summoners(request):
 
 def display_matches(request, summoner_name, summoner_tag, summoner_region, summoner_server):
     try:
-        summoner = get_or_create_summoner(summoner_name, summoner_tag, summoner_region, summoner_server)
+        summoner = get_or_create_summoner(request, summoner_name, summoner_tag, summoner_region, summoner_server)
         #print(summoner)
         handle_new_matches_and_time_info(summoner)
         context = build_display_context(summoner)
@@ -112,10 +114,10 @@ def display_matches(request, summoner_name, summoner_tag, summoner_region, summo
         context['error_message'] = "Ocurrió un error inesperado. Intente de nuevo."
     return context
 
-def get_or_create_summoner(summoner_name, summoner_tag, summoner_region, summoner_server):
+def get_or_create_summoner(request, summoner_name, summoner_tag, summoner_region, summoner_server):
     print(f"League of Data: Actualizando datos de summoner {summoner_name}.")
     api_key = settings.RIOT_API_KEY
-    summoner_info = validate_summoner(summoner_name, summoner_tag, summoner_region, api_key, summoner_server)
+    summoner_info = validate_summoner(request, summoner_name, summoner_tag, summoner_region, api_key, summoner_server)
     #print(summoner_info)
     return save_summoner_info(summoner_info['puuid'], summoner_info)
 
@@ -140,7 +142,7 @@ def build_display_context(summoner):
     print(f"League of Data: Compilando todos los datos de summoner {summoner.summoner_name} para visualización.")
     winrate = calculate_winrate(summoner)
     #print(winrate)
-    matches = Match.objects.filter(summoner_id=summoner)
+    matches = Match.objects.filter(summoner_id=summoner)[:10]
     
     match_details = []
     for match in matches:
@@ -152,15 +154,15 @@ def build_display_context(summoner):
         if not time_info:
             time_info = list(Time_info.objects.filter(match_id=match))
             cache.set(cache_key, time_info, timeout=3600)
-        chatgpt_graphic_data = get_chatgpt_response(graphic_data)
-        chatgpt_time_info = get_chatgpt_response(time_info)    
+        #chatgpt_graphic_data = get_chatgpt_response(graphic_data)
+        #chatgpt_time_info = get_chatgpt_response(time_info)    
         
         match_details.append({
             'match': match,
             'graphic_data': graphic_data,
             'time_info': time_info,
-            'chatgpt_graphic_data': chatgpt_graphic_data,
-            'chatgpt_time_info': chatgpt_time_info
+            #'chatgpt_graphic_data': chatgpt_graphic_data,
+            #'chatgpt_time_info': chatgpt_time_info
         })   
     
     return {

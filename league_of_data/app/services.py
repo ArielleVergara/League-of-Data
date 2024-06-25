@@ -59,9 +59,9 @@ def validate_time_info(time_info):
             raise ValidationError(f"Empty or invalid value for required time_info field: {field}")        
     
 
-def validate_summoner(summoner_name, summoner_tag, summoner_region, api_key, summoner_server):
+def validate_summoner(request, summoner_name, summoner_tag, summoner_region, api_key, summoner_server):
     try:
-        account_info = get_account_info(summoner_name, summoner_tag, summoner_region, api_key)
+        account_info = get_account_info(request, summoner_name, summoner_tag, summoner_region, api_key)
         #print(account_info)
         if not account_info:
             raise ValidationError("Account info could not be retrieved.")

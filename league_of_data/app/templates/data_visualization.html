@@ -16,6 +16,16 @@
             <p>Ratio de Victorias: {{ winrate|floatformat:1 }}%</p>
         </div>
         <br><br>
+        <div class="analysis-comments">
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#geminiAnalysis" aria-expanded="false" aria-controls="geminiAnalysis">
+                Mostrar/Ocultar Análisis GEMINI
+            </button>
+            <div class="collapse" id="geminiAnalysis">
+                <div>{{ chatgpt_graphic_data|safe }}</div>
+            </div>
+        </div>
+        <br>
+        <br>
         {% if match_details %}
         <div class="accordion custom-acc" id="matchAccordion">
             {% for detail in match_details %}
@@ -43,18 +53,13 @@
                             <li>Rol: {{ detail.graphic_data.role }}</li>
                             <li>Linea: {{ detail.graphic_data.lane }}</li>
                         </ul>
-                        <div class="analysis-comments">
-                            <p>Análisis de la partida por ChatGPT: {{ detail.chatgpt_graphic_data }}</p>
-                        </div>
+                        
                         <div>
                             <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='dano' %}" alt="Gráfico de Daño">
                             <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='exp' %}" alt="Gráfico de Experiencia">
                             <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='minions' %}" alt="Gráfico de Minions">
                             <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='nivel' %}" alt="Gráfico de Nivel">
                             <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='oro' %}" alt="Gráfico de Oro">
-                        </div>
-                        <div class="analysis-comments">
-                            <p>Análisis de la partida por ChatGPT: {{ detail.chatgpt_time_info }}</p>
                         </div>
                     </div>
                 </div>
