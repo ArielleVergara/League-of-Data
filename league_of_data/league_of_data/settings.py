@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-&07w7&*8lfog_*9!#^m6#&3hhl90_(%0ghg41c0y^7s=4cs2kh'
 
 #Editar API cada 24hrs
-RIOT_API_KEY = 'RGAPI-cd7a03c4-eba9-4006-a03e-1a44afd49c59'
+RIOT_API_KEY = 'RGAPI-c4b18477-5298-47d4-8581-2e42819b09ef'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

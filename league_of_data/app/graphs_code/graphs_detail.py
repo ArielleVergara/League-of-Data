@@ -2,7 +2,7 @@ import matplotlib
 matplotlib.use('Agg')
 import pandas as pd
 import matplotlib.pyplot as plt
-#import seaborn as sns
+import seaborn as sns
 import numpy as np
 
 
@@ -35,61 +35,61 @@ def generate_graphs(time_info, match_id):
             print("DataFrame está vacío.")
             return None
         try:
-            plt_daño = plt.figure(figsize=(10, 6))
-            plt.plot(df['minuto'], df['damageDone'], color="g", label='Daño Hecho')
-            plt.plot(df['minuto'], df['damageTaken'], color="r", label='Daño Recibido')
-            plt.xlabel('Tiempo (min)')
-            plt.ylabel('Daño')
-            plt.title('Daño Hecho al Minuto')
-            plt.legend()
-            plt.grid()
-            matplotlib.pyplot.close()
+            plt_daño, ax = plt.subplots(figsize=(10, 6))
+            ax.plot(df['minuto'], df['damageDone'], color="g", label='Daño Hecho')
+            ax.plot(df['minuto'], df['damageTaken'], color="r", label='Daño Recibido')
+            ax.set_xlabel('Tiempo (min)')
+            ax.set_ylabel('Daño')
+            ax.set_title('Daño Hecho al Minuto')
+            ax.legend()
+            ax.grid()
+            plt.close(plt_daño)
             
         except:
             print(f"No se pudo generar el gráfico de Daño")
 
         try: 
-            plt_nivel = plt.figure(figsize=(10, 6))
-            plt.plot(df['minuto'], df['level'], color="g", label='Nivel')
-            plt.xlabel('Tiempo (min)')
-            plt.ylabel('Nivel de campeón')
-            plt.title('Nivel de campeón al minuto')
-            plt.grid()
-            matplotlib.pyplot.close()
+            plt_nivel, ax = plt.subplots(figsize=(10, 6))
+            ax.plot(df['minuto'], df['level'], color="g", label='Nivel')
+            ax.set_xlabel('Tiempo (min)')
+            ax.set_ylabel('Nivel de campeón')
+            ax.set_title('Nivel de campeón al minuto')
+            ax.grid()
+            plt.close(plt_nivel)
         except:
             print("No se pudo generar el gráfico de Nivel")
 
         try: 
-            plt_minions = plt.figure(figsize=(10, 6))
-            plt.plot(df['minuto'], df['minions'], color="r", label='Minions')
-            plt.xlabel('Tiempo (min)')
-            plt.ylabel('Minions')
-            plt.title('Minions al minuto')
-            plt.grid()
-            matplotlib.pyplot.close()
+            plt_minions, ax = plt.subplots(figsize=(10, 6))
+            ax.plot(df['minuto'], df['minions'], color="r", label='Minions')
+            ax.set_xlabel('Tiempo (min)')
+            ax.set_ylabel('Minions')
+            ax.set_title('Minions al minuto')
+            ax.grid()
+            plt.close(plt_minions)
         except:
             print("No se pudo generar el gráfico de Minions")   
 
         try: 
 
-            plt_oro = plt.figure(figsize=(10, 6))
-            plt.plot(df['minuto'], df['gold'], color="r", label='Oro')
-            plt.xlabel('Tiempo (min)')
-            plt.ylabel('Oro')
-            plt.title('Oro al minuto')
-            plt.grid()
-            matplotlib.pyplot.close()
+            plt_oro, ax = plt.subplots(figsize=(10, 6))
+            ax.plot(df['minuto'], df['gold'], color="r", label='Oro')
+            ax.set_xlabel('Tiempo (min)')
+            ax.set_ylabel('Oro')
+            ax.set_title('Oro al minuto')
+            ax.grid()
+            plt.close(plt_oro)
         except:
             print("No se pudo generar el gráfico de Oro")
 
         try: 
-            plt_exp = plt.figure(figsize=(10, 6))
-            plt.plot(df['minuto'], df['xp'], color="r", label='Experiencia')
-            plt.xlabel('Tiempo (min)')
-            plt.ylabel('Experiencia')
-            plt.title('Experiencia al minuto')
-            plt.grid()
-            matplotlib.pyplot.close()
+            plt_exp, ax = plt.subplots(figsize=(10, 6))
+            ax.plot(df['minuto'], df['xp'], color="r", label='Experiencia')
+            ax.set_xlabel('Tiempo (min)')
+            ax.set_ylabel('Experiencia')
+            ax.set_title('Experiencia al minuto')
+            ax.grid()
+            plt.close(plt_exp)
         except:
             print("No se pudo generar el gráfico de Experiencia")   
         
