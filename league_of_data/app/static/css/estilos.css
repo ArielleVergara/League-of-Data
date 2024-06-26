@@ -88,6 +88,11 @@ body::before {
     height: 70%;
 }
 
+.banner-img{
+    width: fit-content;
+    height: 70%;
+}
+
 .custom-acc{
     max-width: 900px; 
     margin: 0 auto; 
