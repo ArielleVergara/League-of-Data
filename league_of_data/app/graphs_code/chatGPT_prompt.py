@@ -3,7 +3,7 @@ import os
 import re
 #from IPython.display import Markdown
 
-API_KEY = 'AIzaSyABQj5uydw97nTasXu7GGxwD1N-l4avKdM'
+API_KEY = ''
 
 def markdown_to_html(text):
     text = re.sub(r'## (.+)', r'<h2>\1</h2>', text)
