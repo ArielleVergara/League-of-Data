@@ -214,11 +214,11 @@ def plot_compare(request, summoner_a, summoner_b, graph_type):
     if context is None:
         return HttpResponse("No se encontró información en caché para estos summoners.", status=404)
     try:
-        result = compare_graphs(context)
+        result = compare_graphs(context, summoner_a, summoner_b)
         graph_index = {
             'winrate': 0,
             'champion': 1,
-            #'lane': 2,
+            'lane': 2,
             #'lane': 3
         }.get(graph_type, None)
 

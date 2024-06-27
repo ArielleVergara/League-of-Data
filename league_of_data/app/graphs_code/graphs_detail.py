@@ -98,7 +98,7 @@ def generate_graphs(time_info, match_id):
     print(f"League of Data: Los datos están listos para visualizar.")
     return plt_daño, plt_nivel, plt_minions, plt_oro, plt_exp
     
-def compare_graphs(info):
+def compare_graphs(info, summoner_a, summoner_b):
     #print(info)
     if info:
         try:
@@ -155,39 +155,10 @@ def compare_graphs(info):
                     wins_b.append('Perdida')
                 
                     
-            #all_champions = champions_a + champions_b
+            #all_champions = champions_a + champions_b          
             try:
-                df_champions_a = pd.DataFrame(champions_a, columns=['Champion'])
-                df_champions_b = pd.DataFrame(champions_b, columns=['Champion'])
-            
-
-                champion_counts_a = df_champions_a['Champion'].value_counts().reset_index()
-                champion_counts_a.columns = ['Champion', 'CountA']
-                champion_counts_b = df_champions_b['Champion'].value_counts().reset_index()
-                champion_counts_b.columns = ['Champion', 'CountB']
-                champion_counts = pd.merge(champion_counts_a, champion_counts_b, on='Champion', how='outer').fillna(0)
-                #print(champion_counts)
-            
-                plt_champions, ax = plt.subplots(figsize=(10, 6))
-
-                ax.bar(champion_counts['Champion'], champion_counts['CountA'], color="g", label='Invocador A')
-                ax.bar(champion_counts['Champion'], champion_counts['CountB'], bottom=champion_counts['CountA'], color="r", label='Invocador B')
-                ax.set_xlabel('Campeón')
-                ax.set_ylabel('Frecuencia')
-                ax.set_title('Frecuencia de campeones')
-                ax.legend()
-
-                ax.set_xticklabels(champion_counts['Champion'], rotation=45, ha="right")
-                
-                #return plt_champions
-
-            except:
-                print(f"No se pudo generar el gráfico de Champions")
-            
-            try:
-                # Crear DataFrames para los datos de winrate de los invocadores A y B
-                df_winrate_a = pd.DataFrame([{'Jugador': 'Invocador A', 'Ganadas': summonerA_totalWins, 'Perdidas': summonerA_totalLosses}])
-                df_winrate_b = pd.DataFrame([{'Jugador': 'Invocador B', 'Ganadas': summonerB_totalWins, 'Perdidas': summonerB_totalLosses}])
+                df_winrate_a = pd.DataFrame([{'Jugador': f'{summoner_a}', 'Ganadas': summonerA_totalWins, 'Perdidas': summonerA_totalLosses}])
+                df_winrate_b = pd.DataFrame([{'Jugador': f'{summoner_b}', 'Ganadas': summonerB_totalWins, 'Perdidas': summonerB_totalLosses}])
 
                 # Combinar los DataFrames
                 df_winrate = pd.concat([df_winrate_a, df_winrate_b]).reset_index(drop=True)
@@ -199,12 +170,9 @@ def compare_graphs(info):
                 # Ancho de las barras
                 width = 0.35
 
-                # Barras para partidas ganadas
                 rects1 = ax.bar(x - width/2, df_winrate['Ganadas'], width, label='Ganadas', color='g')
-                # Barras para partidas perdidas
-                rects2 = ax.bar(x + width/2, df_winrate['Perdidas'], width, label='Perdidas', color='r')
+                rects2 = ax.bar(x + width/2, df_winrate['Perdidas'], width, label='Perdidas', color='b')
 
-                # Añadir algunas etiquetas y título
                 ax.set_xlabel('Jugador')
                 ax.set_ylabel('Partidas')
                 ax.set_title('Partidas Ganadas y Perdidas por Jugador')
@@ -217,7 +185,7 @@ def compare_graphs(info):
                         height = rect.get_height()
                         ax.annotate('{}'.format(height),
                                     xy=(rect.get_x() + rect.get_width() / 2, height),
-                                    xytext=(0, 3),  # 3 puntos verticales de offset
+                                    xytext=(0, 3),
                                     textcoords="offset points",
                                     ha='center', va='bottom')
 
@@ -226,10 +194,96 @@ def compare_graphs(info):
 
             except Exception as e:
                 print(f"No se pudo generar el gráfico de Winrate: {e}")
+                
+            try:
+                df_a = pd.DataFrame({'Champion': champions_a, 'Resultado': wins_a})
+                df_b = pd.DataFrame({'Champion': champions_b, 'Resultado': wins_b})
+
+                champion_counts_a = df_a.groupby(['Champion', 'Resultado']).size().unstack(fill_value=0)
+                champion_counts_b = df_b.groupby(['Champion', 'Resultado']).size().unstack(fill_value=0)
+
+                champion_counts = pd.concat([champion_counts_a, champion_counts_b], keys=[summoner_a, summoner_b], axis=1).fillna(0)
+
+                plt_champ, ax = plt.subplots(figsize=(10, 6))
+
+                x = np.arange(len(champion_counts))
+
+                width = 0.35
+
+                rects1 = ax.bar(x - width/2, champion_counts[(summoner_a, 'Ganada')], width, label=f'{summoner_a} Ganadas', color='g')
+                rects2 = ax.bar(x - width/2, champion_counts[(summoner_a, 'Perdida')], width, bottom=champion_counts[(summoner_a, 'Ganada')], label=f'{summoner_a} Perdidas', color='lightgreen')
+
+                rects3 = ax.bar(x + width/2, champion_counts[(summoner_b, 'Ganada')], width, label=f'{summoner_b} Ganadas', color='b')
+                rects4 = ax.bar(x + width/2, champion_counts[(summoner_b, 'Perdida')], width, bottom=champion_counts[(summoner_b, 'Ganada')], label=f'{summoner_b} Perdidas', color='lightblue')
+
+                ax.set_xlabel('Campeón')
+                ax.set_ylabel('Número de Partidas')
+                ax.set_title('Comparación de Campeones según Victorias y Derrotas')
+                ax.set_xticks(x)
+                ax.set_xticklabels(champion_counts.index, rotation=45, ha="right")
+                ax.legend()
+                
+                def autolabel(rects):
+                    for rect in rects:
+                        height = rect.get_height()
+                        ax.annotate('{}'.format(height),
+                                    xy=(rect.get_x() + rect.get_width() / 2, height),
+                                    xytext=(0, 3),
+                                    textcoords="offset points",
+                                    ha='center', va='bottom')
+
+                autolabel(rects1)
+                autolabel(rects2)
+                autolabel(rects3)
+                autolabel(rects4)
+            except:
+                print("No se pudo general el gráfico de winrate por campeones")
+            
+            try:
+                df_a = pd.DataFrame({'Lane': lanes_a, 'Resultado': wins_a})
+                df_b = pd.DataFrame({'Lane': lanes_b, 'Resultado': wins_b})
+
+                lane_counts_a = df_a.groupby(['Lane', 'Resultado']).size().unstack(fill_value=0)
+                lane_counts_b = df_b.groupby(['Lane', 'Resultado']).size().unstack(fill_value=0)
+
+                lane_counts = pd.concat([lane_counts_a, lane_counts_b], keys=[summoner_a, summoner_b], axis=1).fillna(0)
+                
+                plt_lane, ax = plt.subplots(figsize=(10, 6))
+
+                x = np.arange(len(lane_counts))
+
+                width = 0.35
+
+                rects1 = ax.bar(x - width/2, lane_counts[(summoner_a, 'Ganada')], width, label=f'{summoner_a} Ganadas', color='g')
+                rects2 = ax.bar(x - width/2, lane_counts[(summoner_a, 'Perdida')], width, bottom=lane_counts[(summoner_a, 'Ganada')], label=f'{summoner_a} Perdidas', color='lightgreen')
+                rects3 = ax.bar(x + width/2, lane_counts[(summoner_b, 'Ganada')], width, label=f'{summoner_b} Ganadas', color='b')
+                rects4 = ax.bar(x + width/2, lane_counts[(summoner_b, 'Perdida')], width, bottom=lane_counts[(summoner_b, 'Ganada')], label=f'{summoner_b} Perdidas', color='lightblue')
+
+                ax.set_xlabel('Línea')
+                ax.set_ylabel('Ratio de Victorias')
+                ax.set_title('Comparación de Partidas Ganadas y Perdidas por Lane')
+                ax.set_xticks(x)
+                ax.set_xticklabels(lane_counts.index, rotation=45, ha="right")
+                ax.legend()
+                
+                def autolabel(rects):
+                    for rect in rects:
+                        height = rect.get_height()
+                        ax.annotate('{}'.format(height),
+                                    xy=(rect.get_x() + rect.get_width() / 2, height),
+                                    xytext=(0, 3),  # 3 puntos verticales de offset
+                                    textcoords="offset points",
+                                    ha='center', va='bottom')
+                autolabel(rects1)
+                autolabel(rects2)
+                autolabel(rects3)
+                autolabel(rects4)
+            except:
+                print(f"No se pudo generar el gráfico de Champions")
         except:
             print("No se pudo acceder a la información de los Summoners")
             return None
-        return plt_winrate, plt_champions
+        return plt_winrate, plt_champ, plt_lane
     else:
         print("La información de los summoners está vacía")
         return None

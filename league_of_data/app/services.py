@@ -240,7 +240,7 @@ def send_time_info(match_id, api_key, summoner_name):
                 match_time_info = {
                     'match_id': int(match.id),
                     'summoner_id': summoner.id,
-                    'damageDone': summoner_time_info['damageStats']['totalDamageDone'],
+                    'damageDone': summoner_time_info['damageStats']['totalDamageDoneToChampions'],
                     'damageTaken': summoner_time_info['damageStats']['totalDamageTaken'],
                     'gold': summoner_time_info['totalGold'],
                     'xp': summoner_time_info['xp'],

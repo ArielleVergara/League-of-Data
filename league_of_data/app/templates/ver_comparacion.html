@@ -26,6 +26,9 @@
                     <br>
                     <br>
                     <img class="img-fluid graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='champion' %}" alt="Gráfico de champion">
+                    <br>
+                    <br>
+                    <img class="img-fluid graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='lane' %}" alt="Gráfico de ganadas por champion">
                 </div>
             </div>
         </div>
