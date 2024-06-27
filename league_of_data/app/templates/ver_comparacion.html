@@ -22,7 +22,10 @@
                     <h3>VS</h3>
                     <br>
                     <h5>Comparación Gráfica</h5>
-                    <img class="img-fluid graph-img mb-3" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='winrate' %}" alt="Gráfico de winrate">
+                    {% comment %} <img class="img-fluid graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='radar' %}" alt="Gráfico de radar">
+                    <br>
+                    <br> {% endcomment %}
+                    <img class="img-fluid graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='winrate' %}" alt="Gráfico de winrate">
                     <br>
                     <br>
                     <img class="img-fluid graph-img" src="{% url 'plot_compare' summoner_a=summonerA.summoner.summoner_name summoner_b=summonerB.summoner.summoner_name graph_type='champion' %}" alt="Gráfico de champion">

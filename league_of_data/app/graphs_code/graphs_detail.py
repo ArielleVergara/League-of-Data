@@ -2,8 +2,9 @@ import matplotlib
 matplotlib.use('Agg')
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+#import seaborn as sns
 import numpy as np
+from math import pi
 
 
 def extract_data(time_info):
@@ -110,6 +111,13 @@ def compare_graphs(info, summoner_a, summoner_b):
             roles_a = []
             lanes_a = []
             wins_a = []
+            assists_a = []
+            deaths_a = []
+            gold_a = []
+            kills_a = []
+            damageDealt_a = []
+            damageTaken_a = []
+            minions_a =[]            
             
             for match in summonerA_matchDetails:
                 graphic_data = match['graphic_data']
@@ -127,6 +135,31 @@ def compare_graphs(info, summoner_a, summoner_b):
                     wins_a.append('Ganada')
                 else:
                     wins_a.append('Perdida')
+                assists = graphic_data.assists
+                if assists:
+                    assists_a.append(assists)
+                deaths = graphic_data.deaths
+                if deaths:
+                    deaths_a.append(deaths)
+                gold = graphic_data.goldEarned
+                if gold:
+                    gold_a.append(gold)
+                kills = graphic_data.kills
+                if kills:
+                    kills_a.append(kills)
+                damageDealt = graphic_data.totalDamageDealt
+                if damageDealt:
+                    damageDealt_a.append(damageDealt)
+                damageTaken = graphic_data.totalDamageTaken
+                if damageTaken:
+                    damageTaken_a.append(damageTaken)
+                
+            for match in summonerA_matchDetails:
+                time_info = match['time_info']
+                time = time_info[-1]
+                minion = time.minions
+                minions_a.append(minion)
+                    
 
                 
             summonerB_totalLosses = info['summonerB']['summoner'].total_losses
@@ -136,6 +169,13 @@ def compare_graphs(info, summoner_a, summoner_b):
             roles_b = []
             lanes_b = []
             wins_b = []
+            assists_b = []
+            deaths_b = []
+            gold_b = []
+            kills_b = []
+            damageDealt_b = []
+            damageTaken_b = []
+            minions_b =[]
 
             for match in summonerB_matchDetails:
                 graphic_data = match['graphic_data']
@@ -153,21 +193,102 @@ def compare_graphs(info, summoner_a, summoner_b):
                     wins_b.append('Ganada')
                 else:
                     wins_b.append('Perdida')
+                assists = graphic_data.assists
+                if assists:
+                    assists_b.append(assists)
+                deaths = graphic_data.deaths
+                if deaths:
+                    deaths_b.append(deaths)
+                gold = graphic_data.goldEarned
+                if gold:
+                    gold_b.append(gold)
+                kills = graphic_data.kills
+                if kills:
+                    kills_b.append(kills)
+                damageDealt = graphic_data.totalDamageDealt
+                if damageDealt:
+                    damageDealt_b.append(damageDealt)
+                damageTaken = graphic_data.totalDamageTaken
+                if damageTaken:
+                    damageTaken_b.append(damageTaken)
+                
+            for match in summonerA_matchDetails:
+                time_info = match['time_info']
+                time = time_info[-1]
+                minion = time.minions
+                minions_b.append(minion)
+            
+            """ kda_a = [(k + a) / d if d != 0 else (k + a) for k, a, d in zip(kills_a, assists_a, deaths_a)]
+            kda_b = [(k + a) / d if d != 0 else (k + a) for k, a, d in zip(kills_b, assists_b, deaths_b)]
+            
+            avg_kda_a = sum(kda_a) / len(kda_a)
+            avg_kda_b = sum(kda_b) / len(kda_b)
+            avg_minions_a = sum(minions_a) / len(minions_a)
+            avg_minions_b = sum(minions_b) / len(minions_b)
+            avg_gold_a = sum(gold_a) / len(gold_a)
+            avg_gold_b = sum(gold_b) / len(gold_b)
+            avg_damageDealt_a = sum(damageDealt_a) / len(damageDealt_a)
+            avg_damageDealt_b = sum(damageDealt_b) / len(damageDealt_b)
+            avg_damageTaken_a = sum(damageTaken_a) / len(damageTaken_a)
+            avg_damageTaken_b = sum(damageTaken_b) / len(damageTaken_b)
+            
+            max_kda = max(avg_kda_a, avg_kda_b)
+            max_minions = max(avg_minions_a, avg_minions_b)
+            max_gold = max(avg_gold_a, avg_gold_b)
+            max_damageDealt = max(avg_damageDealt_a, avg_damageDealt_b)
+            max_damageTaken = max(avg_damageTaken_a, avg_damageTaken_b)
+            
+            player_a_stats = [
+            avg_kda_a / max_kda,
+            avg_minions_a / max_minions,
+            avg_gold_a / max_gold,
+            avg_damageDealt_a / max_damageDealt,
+            avg_damageTaken_a / max_damageTaken
+            ]
+            
+            player_b_stats = [
+                avg_kda_b / max_kda,
+                avg_minions_b / max_minions,
+                avg_gold_b / max_gold,
+                avg_damageDealt_b / max_damageDealt,
+                avg_damageTaken_b / max_damageTaken
+            ]
+            
+            try:
+                categories = ['KDA', 'Minions', 'Oro', 'Daño hecho', 'Daño recibido']
+                player_a_stats = [sum(kda_a) / len(kda_a), sum(minions_a) / len(minions_a), sum(gold_a) / len(gold_a), sum(damageDealt_a) / len(damageDealt_a), sum(damageTaken_a) / len(damageTaken_a)]
+                player_b_stats = [sum(kda_b) / len(kda_b), sum(minions_b) / len(minions_b), sum(gold_b) / len(gold_b), sum(damageDealt_b) / len(damageDealt_b), sum(damageTaken_b) / len(damageTaken_b)]
+                
+                num_vars = len(categories)
+                angles = [n / float(num_vars) * 2 * pi for n in range(num_vars)]
+                angles += angles[:1]
+
+                plt_radar, ax = plt.subplots(figsize=(10, 6), subplot_kw=dict(polar=True))
+
+                values_a = player_a_stats + player_a_stats[:1]
+                ax.plot(angles, values_a, linewidth=1, linestyle='solid', label=f'{summoner_a}')
+                ax.fill(angles, values_a, 'b', alpha=0.1)
+
+                values_b = player_b_stats + player_b_stats[:1]
+                ax.plot(angles, values_b, linewidth=1, linestyle='solid', label=f'{summoner_b}')
+                ax.fill(angles, values_b, 'r', alpha=0.1)
+
+                plt.xticks(angles[:-1], categories)
+
+                ax.legend(loc='upper right', bbox_to_anchor=(0.1, 0.1))
+                plt.close(plt_radar)
+            except Exception as e:
+                print(f"No se pudo generar el gráfico de Radar: {e}") """
                 
                     
-            #all_champions = champions_a + champions_b          
             try:
                 df_winrate_a = pd.DataFrame([{'Jugador': f'{summoner_a}', 'Ganadas': summonerA_totalWins, 'Perdidas': summonerA_totalLosses}])
                 df_winrate_b = pd.DataFrame([{'Jugador': f'{summoner_b}', 'Ganadas': summonerB_totalWins, 'Perdidas': summonerB_totalLosses}])
 
-                # Combinar los DataFrames
                 df_winrate = pd.concat([df_winrate_a, df_winrate_b]).reset_index(drop=True)
 
-                # Crear el gráfico
                 plt_winrate, ax = plt.subplots(figsize=(10, 6))
-                # Posiciones de las barras en el eje x
                 x = np.arange(len(df_winrate))
-                # Ancho de las barras
                 width = 0.35
 
                 rects1 = ax.bar(x - width/2, df_winrate['Ganadas'], width, label='Ganadas', color='g')
@@ -191,6 +312,7 @@ def compare_graphs(info, summoner_a, summoner_b):
 
                 autolabel(rects1)
                 autolabel(rects2)
+                plt.close(plt_winrate)
 
             except Exception as e:
                 print(f"No se pudo generar el gráfico de Winrate: {e}")
@@ -236,6 +358,7 @@ def compare_graphs(info, summoner_a, summoner_b):
                 autolabel(rects2)
                 autolabel(rects3)
                 autolabel(rects4)
+                plt.close(plt_champ)
             except:
                 print("No se pudo general el gráfico de winrate por campeones")
             
@@ -271,13 +394,14 @@ def compare_graphs(info, summoner_a, summoner_b):
                         height = rect.get_height()
                         ax.annotate('{}'.format(height),
                                     xy=(rect.get_x() + rect.get_width() / 2, height),
-                                    xytext=(0, 3),  # 3 puntos verticales de offset
+                                    xytext=(0, 3),
                                     textcoords="offset points",
                                     ha='center', va='bottom')
                 autolabel(rects1)
                 autolabel(rects2)
                 autolabel(rects3)
                 autolabel(rects4)
+                plt.close(plt_lane)
             except:
                 print(f"No se pudo generar el gráfico de Champions")
         except:

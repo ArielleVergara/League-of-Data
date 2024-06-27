@@ -218,8 +218,7 @@ def plot_compare(request, summoner_a, summoner_b, graph_type):
         graph_index = {
             'winrate': 0,
             'champion': 1,
-            'lane': 2,
-            #'lane': 3
+            'lane': 2
         }.get(graph_type, None)
 
         if graph_index is None:
