@@ -5,12 +5,11 @@
     <h2 class="text-center">Comparación de Jugadores</h2>
     <div class="row p-5">
         <!-- Columna para el Jugador A -->
+        
         <div class="col-md-3">
             <div>
                 <div class="text-center">
-                    <h3 class="text-white">{{ summonerA.summoner.summoner_name }}</h3>
-                    <p>[Info Jugador A]</p>
-                    <!-- Más estadísticas y gráficos -->
+                    {{ consejo.summonerA|safe }}
                 </div>
             </div>
         </div>
@@ -40,9 +39,7 @@
         <div class="col-md-3">
             <div>
                 <div class="text-center">
-                    <h3 class="text-white">{{ summonerB.summoner.summoner_name }}</h3>
-                    <p>[Info Jugador B]</p>
-                    <!-- Más estadísticas y gráficos -->
+                    {{ consejo.summonerB|safe }}
                 </div>
             </div>
         </div>

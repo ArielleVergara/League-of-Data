@@ -1,13 +1,9 @@
 import google.generativeai as genai
 import os
-import textwrap
 import re
-import pathlib
-from IPython.display import Markdown
+#from IPython.display import Markdown
 
-def to_markdown(text):
-    text = text.replace('•', '  *')
-    return Markdown(textwrap.indent(text, '> ', predicate=lambda _: True))
+API_KEY = 'AIzaSyABQj5uydw97nTasXu7GGxwD1N-l4avKdM'
 
 def markdown_to_html(text):
     text = re.sub(r'## (.+)', r'<h2>\1</h2>', text)
@@ -21,7 +17,7 @@ def markdown_to_html(text):
     return text
 
 def get_chatgpt_response(context):
-    API_KEY = ''
+    
     summoner = context['summoner'].summoner_name
     winrate = context['winrate']
     tier = context['summoner'].tier
@@ -83,6 +79,102 @@ def get_chatgpt_response(context):
         html_response = markdown_to_html(response.text)
         return html_response
         
+    except Exception as e:
+        print(f"Error al obtener respuesta de OpenAI: {e}")
+        return None
+
+def comparacion_gemini(context):
+    summonerA_name = context['summonerA']['summoner'].summoner_name
+    summonerB_name = context['summonerB']['summoner'].summoner_name
+    summonerA_winrate = context['summonerA']['winrate']
+    summonerB_winrate = context['summonerB']['winrate']
+    summonerA_totalwins = context['summonerA']['summoner'].total_wins
+    summonerB_totalwins = context['summonerB']['summoner'].total_wins
+    summonerA_totalLosses = context['summonerA']['summoner'].total_losses
+    summonerB_totalLosses = context['summonerB']['summoner'].total_losses
+    summonerA_champions = []
+    summonerB_champions = []
+    summonerA_lanes = []
+    summonerB_lanes = []
+    summonerA_roles = []
+    summonerB_roles = []
+    summonerA_wins = []
+    summonerB_wins = []
+
+    
+    for match in context['summonerA']['match_details']:
+        champion = match['graphic_data'].championName
+        summonerA_champions.append(champion)
+        lane = match['graphic_data'].lane
+        summonerA_lanes.append(lane)
+        role = match['graphic_data'].role
+        summonerA_roles.append(role)
+        wins = match['graphic_data'].win
+        if wins == True:
+            summonerA_wins.append('Ganada')
+        else:
+            summonerA_wins.append('Perdida')
+        
+    for match in context['summonerB']['match_details']:
+        champion = match['graphic_data'].championName
+        summonerB_champions.append(champion)
+        lane = match['graphic_data'].lane
+        summonerB_lanes.append(lane)
+        role = match['graphic_data'].role
+        summonerB_roles.append(role)
+        wins = match['graphic_data'].win
+        if wins == True:
+            summonerB_wins.append('Ganada')
+        else:
+            summonerB_wins.append('Perdida')
+    
+    consejo = {}
+    context.keys()
+    
+    try:
+        for key in context:
+            genai.configure(api_key=API_KEY)
+            
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            if key == 'summonerA':
+                prompt = ('Dame un análisis acotado de los siguientes gráficos de un jugador de League of Legends.'
+                          f'En el primer gráfico de barras, el eje X representa al jugador {summonerA_name} '
+                          f'y el eje Y representa la cantidad de partidas ganadas {summonerA_totalwins} o perdidas {summonerA_totalLosses},'
+                          f'graficando así, el ratio de victorias de un {summonerA_winrate}. '
+                          f'En el segundo gráfico de barras apiladas, el eje X representa el campeón utilizado {summonerA_champions}, '
+                          f'y el eje Y representa el número de partidas jugadas con esos campeones. '
+                          f'Cada barra está dividida en dos secciones: la parte superior representa las '
+                          f'partidas ganadas y la parte inferior representa las partidas perdidas {summonerA_wins}. '
+                          f'los siguientes resultados {summonerA_wins}. '
+                          f'El tercer gráfico grafica las partidas gandas y perdidas según la linea jugada. '
+                          f'El eje X representa la línea jugada {summonerA_lanes} y el eje Y '
+                          f'representa el ratio de victorias {summonerA_wins}. '
+                          f'Cada línea está divida en dos secciones: la parte superior representa las '
+                          f'partidas ganadas y la parte inferior representa las partidas perdidas. '
+                          )
+                response = model.generate_content(prompt)
+                html_response = markdown_to_html(response.text)
+                consejo['summonerA'] = html_response
+            else:
+                prompt = ('Dame un análisis acotado de los siguientes gráficos de un jugador de League of Legends. '
+                          f'En el primer gráfico de barras, el eje X representa al jugador {summonerB_name} '
+                          f'y el eje Y representa la cantidad de partidas ganadas {summonerA_totalwins} o perdidas {summonerA_totalLosses}, '
+                          f'graficando así, el ratio de victorias de un {summonerB_winrate}. '
+                          f'En el segundo gráfico de barras apiladas, el eje X representa el campeón utilizado {summonerB_champions}, '
+                          f'y el eje Y representa el número de partidas jugadas con esos campeones. '
+                          f'Cada barra está dividida en dos secciones: la parte superior representa las '
+                          f'partidas ganadas y la parte inferior representa las partidas perdidas {summonerB_wins}. '
+                          f'los siguientes resultados {summonerB_wins}. '
+                          f'El tercer gráfico grafica las partidas gandas y perdidas según la linea jugada. '
+                          f'El eje X representa la línea jugada {summonerB_lanes} y el eje Y '
+                          f'representa el ratio de victorias {summonerB_wins}. '
+                          f'Cada línea está divida en dos secciones: la parte superior representa las '
+                          f'partidas ganadas y la parte inferior representa las partidas perdidas. '
+                          )
+                response = model.generate_content(prompt)
+                html_response = markdown_to_html(response.text)
+                consejo['summonerB'] = html_response
+        return consejo      
     except Exception as e:
         print(f"Error al obtener respuesta de OpenAI: {e}")
         return None

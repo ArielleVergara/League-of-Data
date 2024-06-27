@@ -13,7 +13,7 @@ import traceback
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from .graphs_code.fn_data_api import get_match_list
-from .graphs_code.chatGPT_prompt import get_chatgpt_response
+from .graphs_code.chatGPT_prompt import get_chatgpt_response, comparacion_gemini
 import logging
 
 logger = logging.getLogger(__name__)
@@ -90,8 +90,9 @@ def compare_summoners(request):
                 'summonerA': summoner_a,
                 'summonerB': summoner_b
             }
-            #print(context)
+            consejo = comparacion_gemini(context)
             cache.set(cache_key, context, timeout=3600)
+            context['consejo'] = consejo
             return render(request, 'ver_comparacion.html', context)
         except Exception as e:
             return render(request, 'error.html', {'error_message': str(e)})
