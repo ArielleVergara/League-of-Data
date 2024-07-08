@@ -115,26 +115,22 @@ def get_total_losses (ranked_info):
     return total_losses
 
 def get_match_list(summoner_puuid, region, api_key):
-    cache_key = f'match-list-{summoner_puuid}-{region}'
-    match_list = cache.get(cache_key)
-    if not match_list:
-        url_start = "https://"
-        url_middle = ".api.riotgames.com/lol/match/v5/matches/by-puuid/"
-        url_finish = "/ids?type=ranked&start=0&count=20&api_key="
-
-        try:
-            api_url = f"{url_start}{region}{url_middle}{summoner_puuid}{url_finish}{api_key}"
-            resp_list = requests.get(api_url)
-            resp_list.raise_for_status()
-            match_list = resp_list.json()
-        except HTTPError as http_err:
-            print(f"HTTP error occurred: {http_err}")
-        except ConnectionError as conn_err:
-            print(f"Connection error occurred: {conn_err}")
-        except Timeout as timeout_err:
-            print(f"Timeout error occurred: {timeout_err}")
-        except RequestException as req_err:
-            print(f"Request exception occurred: {req_err}")
+    url_start = "https://"
+    url_middle = ".api.riotgames.com/lol/match/v5/matches/by-puuid/"
+    url_finish = "/ids?type=ranked&start=0&count=20&api_key="
+    try:
+        api_url = f"{url_start}{region}{url_middle}{summoner_puuid}{url_finish}{api_key}"
+        resp_list = requests.get(api_url)
+        resp_list.raise_for_status()
+        match_list = resp_list.json()
+    except HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+    except ConnectionError as conn_err:
+        print(f"Connection error occurred: {conn_err}")
+    except Timeout as timeout_err:
+        print(f"Timeout error occurred: {timeout_err}")
+    except RequestException as req_err:
+        print(f"Request exception occurred: {req_err}")
     return match_list
 
 def get_latest_match_id(match_list):

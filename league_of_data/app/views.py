@@ -5,7 +5,7 @@ from django.shortcuts import render
 from league_of_data import settings
 from django.http import JsonResponse
 from .services import save_summoner_info, save_matches_stats, send_time_info, validate_summoner, save_time_info, get_summoner_stats, calculate_winrate
-from .models import Time_info, Match, Graphic_data
+from .models import Time_info, Match, Graphic_data, Summoner
 from .graphs_code.graphs_detail import generate_graphs, compare_graphs
 import matplotlib.pyplot as plt
 from io import BytesIO
@@ -15,6 +15,7 @@ from django.core.exceptions import ValidationError
 from .graphs_code.fn_data_api import get_match_list
 from .graphs_code.chatGPT_prompt import get_chatgpt_response, comparacion_gemini
 import logging
+from .graphs_code.fn_data_api import get_match_data
 
 logger = logging.getLogger(__name__)
 
@@ -101,17 +102,20 @@ def compare_summoners(request):
     
 
 def display_matches(request, summoner_name, summoner_tag, summoner_region, summoner_server):
+    api_key = settings.RIOT_API_KEY
     try:
         summoner = get_or_create_summoner(request, summoner_name, summoner_tag, summoner_region, summoner_server)
         #print(summoner)
-        handle_new_matches_and_time_info(summoner)
-        context = build_display_context(summoner)
+        match_list = get_match_list(summoner['puuid'], summoner_region, api_key)
+        match_list = match_list[:10]
+        context = build_display_context(summoner, match_list)
+        
         if not context:
             context['error_message'] = "No se pudo construir el contexto para la visualización."
     except ValidationError as e:
         context['error_message'] = str(e)
     except Exception as e:
-        logger.error(f"An error occurred in display_matches: {e}", exc_info=True)
+        logger.error(f"Ocurrió un error en display_matches: {e}", exc_info=True)
         context['error_message'] = "Ocurrió un error inesperado. Intente de nuevo."
     return context
 
@@ -119,53 +123,48 @@ def get_or_create_summoner(request, summoner_name, summoner_tag, summoner_region
     print(f"League of Data: Actualizando datos de summoner {summoner_name}.")
     api_key = settings.RIOT_API_KEY
     summoner_info = validate_summoner(request, summoner_name, summoner_tag, summoner_region, api_key, summoner_server)
-    #print(summoner_info)
-    return save_summoner_info(summoner_info['puuid'], summoner_info)
-
-def handle_new_matches_and_time_info(summoner):
-    print(f"League of Data: Buscando datos de partidas de summoner {summoner.summoner_name}.")
-    api_key = settings.RIOT_API_KEY
-    new_matches = get_match_list(summoner.puuid, summoner.region, api_key)
-    existing_match_ids = set(Match.objects.filter(summoner_id=summoner).values_list('api_match_id', flat=True))
-    for match_id in new_matches:
+    save_summoner_info(summoner_info['puuid'], summoner_info)
+    return summoner_info
+      
+def handle_new_matches_and_time_info(summoner, match_list, graphic_data):
+    summ = Summoner.objects.filter(puuid = summoner['puuid']).values()
+    summ = summ[0]
+    
+    existing_match_ids = set(Match.objects.filter(summoner_id=summ['id']).values_list('api_match_id', flat=True))
+    for match_id in match_list:
         if match_id not in existing_match_ids:
             try:
-                match_data = get_summoner_stats(summoner, match_id, api_key)
-                save_matches_stats(summoner, match_id, match_data)
-                time_data = send_time_info(match_id, api_key, summoner.summoner_name)
+                save_matches_stats(summoner, match_id, graphic_data)
+                #cache_key = f"time_info_{match_id}"
+                #time_info = cache.get(cache_key)
                 #print(time_data)
-                save_time_info(match_id, time_data, summoner)
+                #save_time_info(match_id, time_info, summoner)
             except Exception as e:
                 logger.error(f"Error handling new matches and time info: {e}", exc_info=True)
                 raise ValidationError("Error al procesar las nuevas partidas. Intente de nuevo.")
 
-def build_display_context(summoner):
-    print(f"League of Data: Compilando todos los datos de summoner {summoner.summoner_name} para visualización.")
+def build_display_context(summoner, match_list):
+    api_key = settings.RIOT_API_KEY
+    print(f"League of Data: Compilando todos los datos de summoner {summoner['summoner_name']} para visualización.")
     winrate = calculate_winrate(summoner)
     #print(winrate)
-    matches = Match.objects.filter(summoner_id=summoner)[:10]
-    
-    match_details = []
-    for match in matches:
-        graphic_data = Graphic_data.objects.filter(match_id=match).first()
+    cache_key = f'match-details-{summoner["summoner_name"]}'
+    match_details = cache.get(cache_key)
+    if not match_details:
+        match_details = []
+        for match in match_list:
+            match_data = get_match_data(match, summoner['region'], api_key)
+            graphic_data = get_summoner_stats(summoner, match, match_data)
+            time_info = send_time_info(match, api_key, summoner['summoner_name'], match_data)
+            handle_new_matches_and_time_info(summoner, match, graphic_data)
 
-        cache_key = f"time_info_{match.id}"
-        time_info = cache.get(cache_key)
-
-        if not time_info:
-            time_info = list(Time_info.objects.filter(match_id=match))
-            cache.set(cache_key, time_info, timeout=3600)
-        #chatgpt_graphic_data = get_chatgpt_response(graphic_data)
-        #chatgpt_time_info = get_chatgpt_response(time_info)    
-        
-        match_details.append({
-            'match': match,
-            'graphic_data': graphic_data,
-            'time_info': time_info,
-            #'chatgpt_graphic_data': chatgpt_graphic_data,
-            #'chatgpt_time_info': chatgpt_time_info
-        })   
-    
+            match_details.append({
+                'match': match,
+                'graphic_data': graphic_data,
+                'time_info': time_info,
+            })
+      
+    cache.set(cache_key, match_details, timeout = 3600)
     return {
         'summoner': summoner,
         'match_details': match_details,
@@ -175,15 +174,13 @@ def build_display_context(summoner):
 
 def plot_image(request, graph_type, summoner_name, match_id):
     #print(match_id)
-    cache_key = f"time_info_{match_id}"
-    time_info = cache.get(cache_key)
+    cache_key = f"match-details-{summoner_name}"
+    match_details = cache.get(cache_key)
     #print(time_info)
-    if not time_info:
-        time_info = list(Time_info.objects.filter(match_id_id=match_id))
-        cache.set(cache_key, time_info, timeout=3600)
+    
     try:
         #print(time_info)      
-        result = generate_graphs(time_info, match_id)
+        result = generate_graphs(match_details, match_id)
         graph_index = {
             'dano': 0,
             'nivel': 1,

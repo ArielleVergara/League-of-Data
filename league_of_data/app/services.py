@@ -11,6 +11,7 @@ from .graphs_code.fn_data_api import (
 from django.core.exceptions import ValidationError
 import requests
 import logging
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -177,50 +178,43 @@ def save_summoner_info(summoner_puuid, summ_info):
         else:
             return existing_summoner
 
-def get_summoner_stats(summoner, match_id, api_key):
-    #print(match_id)
-    #print(summoner)
-    match_data = get_match_data(match_id, summoner.region, api_key)
-    #print(match_data)
-    if match_data:
-        participants = get_participants(match_data)
-        #print(participants)
-        participant_info = get_participants_info(match_data)
-        #print(participant_info)
-        summoner_index = get_summoner_index(participants, summoner.puuid)
-        #print(summoner_index)
-        summoner_data = get_summoner_data(participant_info, summoner_index)
-        #print(summoner_data)
-        
-        try:
-            match_details = {
-                'match_id': match_id,
-                'championName': get_championName(summoner_data),
-                'kills': get_kills(summoner_data),
-                'assists': get_assists(summoner_data),
-                'deaths': get_deaths(summoner_data),
-                'goldEarned': get_goldEarned(summoner_data),
-                'totalDamageDealt': get_totalDamageDealt(summoner_data),
-                'totalDamageTaken': get_totalDamageTaken(summoner_data),
-                'role': get_role(summoner_data),
-                'lane': get_lane(summoner_data),
-                'win': get_win(summoner_data),
-            }
-            #print(match_details)
-            validate_match_data(match_details)
-            if match_details:
-                return match_details
-                #print(all_match_details)
-            else:
-                print(f"No match_details for match {match_id}")
-        except ValidationError as e:
-            print(f"Validation error for match {match_id}: {str(e)}")
+def get_summoner_stats(summoner, match_id, match_data):    
+    participants = get_participants(match_data)
+    #print(participants)
+    participant_info = get_participants_info(match_data)
+    #print(participant_info)
+    summoner_index = get_summoner_index(participants, summoner['puuid'])
+    #print(summoner_index)
+    summoner_data = get_summoner_data(participant_info, summoner_index)
+    #print(summoner_data)
+    try:
+        match_details = {
+            'match_id': match_id,
+            'championName': get_championName(summoner_data),
+            'kills': get_kills(summoner_data),
+            'assists': get_assists(summoner_data),
+            'deaths': get_deaths(summoner_data),
+            'goldEarned': get_goldEarned(summoner_data),
+            'totalDamageDealt': get_totalDamageDealt(summoner_data),
+            'totalDamageTaken': get_totalDamageTaken(summoner_data),
+            'role': get_role(summoner_data),
+            'lane': get_lane(summoner_data),
+            'win': get_win(summoner_data),
+        }
+        #print(match_details)
+        validate_match_data(match_details)
+        if match_details:
+            return match_details
+            #print(all_match_details)
+        else:
+            print(f"No match_details for match {match_id}")
+    except ValidationError as e:
+        print(f"Validation error for match {match_id}: {str(e)}")
     
 
-def send_time_info(match_id, api_key, summoner_name):
+def send_time_info(match_id, api_key, summoner_name, match_data):
     try:
         summoner = Summoner.objects.get(summoner_name=summoner_name)
-        match_data = get_match_data(match_id, summoner.region, api_key)
         participants = get_participants(match_data)
         summoner_index = get_summoner_index(participants, summoner.puuid)
         summoner_index = f"{summoner_index +1}"
@@ -231,14 +225,13 @@ def send_time_info(match_id, api_key, summoner_name):
             raise ValueError("No time info available for match {}".format(match_id))
 
         minutes = [int(minute) for minute in get_match_minutes(time_info)]
-        match = Match.objects.filter(api_match_id = match_id).first()
         all_match_time_info = []
 
         with transaction.atomic():
             for min in minutes:
                 summoner_time_info = time_info[min]['participantFrames'][summoner_index]
                 match_time_info = {
-                    'match_id': int(match.id),
+                    'match_id': match_id,
                     'summoner_id': summoner.id,
                     'damageDone': summoner_time_info['damageStats']['totalDamageDoneToChampions'],
                     'damageTaken': summoner_time_info['damageStats']['totalDamageTaken'],
@@ -266,7 +259,8 @@ def send_time_info(match_id, api_key, summoner_name):
 
 
 def save_matches_stats(summoner, match_id, summoner_data):
-    print(f"League of Data: Guardando los datos de {summoner.summoner_name} en la base de datos.")
+    print(f"League of Data: Guardando los datos de {summoner['summoner_name']} en la base de datos.")
+    summoner = Summoner.objects.get(summoner_name=summoner['summoner_name'])
     with transaction.atomic():
         match_instance, _ = Match.objects.update_or_create(
             summoner_id=summoner, api_match_id=match_id
@@ -290,6 +284,7 @@ def save_matches_stats(summoner, match_id, summoner_data):
         )
 
 def save_time_info(match_id, time_data, summoner):
+    summoner = Summoner.objects.get(summoner_name=summoner['summoner_name'])
     for time in time_data:
         with transaction.atomic():
             match_instance = Match.objects.get(api_match_id=match_id)
@@ -310,9 +305,9 @@ def save_time_info(match_id, time_data, summoner):
             )
 
 def calculate_winrate(summoner):
-    if summoner.total_wins + summoner.total_losses == 0:
+    if summoner['total_wins'] + summoner['total_losses'] == 0:
         return 0  # Evita la división por cero si no hay partidas jugadas
-    winrate = (summoner.total_wins / (summoner.total_wins + summoner.total_losses)) * 100
+    winrate = (summoner['total_wins'] / (summoner['total_wins'] + summoner['total_losses'])) * 100
     return winrate
 
 

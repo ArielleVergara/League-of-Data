@@ -44,9 +44,7 @@
                     <div class="accordion-body">
                         <ul>
                             <li>Campeón: {{ detail.graphic_data.championName }}</li>
-                            <li>Asesinatos: {{ detail.graphic_data.kills }}</li>
-                            <li>Asistencias: {{ detail.graphic_data.assists }}</li>
-                            <li>Muertes: {{ detail.graphic_data.deaths }}</li>
+                            <li>KDA: {{ detail.graphic_data.kills }}/{{ detail.graphic_data.deaths }}/{{ detail.graphic_data.assists }}</li>
                             <li>Oro Total Obtenido: {{ detail.graphic_data.goldEarned }}</li>
                             <li>Daño Total Infligido: {{ detail.graphic_data.totalDamageDealt }}</li>
                             <li>Daño Total Recibido: {{ detail.graphic_data.totalDamageTaken }}</li>
@@ -55,11 +53,11 @@
                         </ul>
                         
                         <div>
-                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='dano' %}" alt="Gráfico de Daño">
-                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='exp' %}" alt="Gráfico de Experiencia">
-                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='minions' %}" alt="Gráfico de Minions">
-                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='nivel' %}" alt="Gráfico de Nivel">
-                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match.id graph_type='oro' %}" alt="Gráfico de Oro">
+                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match graph_type='dano' %}" alt="Gráfico de Daño">
+                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match graph_type='exp' %}" alt="Gráfico de Experiencia">
+                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match graph_type='minions' %}" alt="Gráfico de Minions">
+                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match graph_type='nivel' %}" alt="Gráfico de Nivel">
+                            <img class="large-img" src="{% url 'plot_image' summoner_name=summoner.summoner_name match_id=detail.match graph_type='oro' %}" alt="Gráfico de Oro">
                         </div>
                     </div>
                 </div>

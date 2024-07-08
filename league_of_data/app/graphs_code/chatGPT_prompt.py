@@ -3,7 +3,7 @@ import os
 import re
 #from IPython.display import Markdown
 
-API_KEY = ''
+API_KEY = 'AIzaSyABQj5uydw97nTasXu7GGxwD1N-l4avKdM'
 
 def markdown_to_html(text):
     text = re.sub(r'## (.+)', r'<h2>\1</h2>', text)
@@ -17,11 +17,11 @@ def markdown_to_html(text):
     return text
 
 def get_chatgpt_response(context):
-    
-    summoner = context['summoner'].summoner_name
+    print(context)
+    summoner = context['summoner']['summoner_name']
     winrate = context['winrate']
-    tier = context['summoner'].tier
-    rango = context['summoner'].rank
+    tier = context['summoner']['tier']
+    rango = context['summoner']['rank']
     match_list = context['match_details']
     total_champs = []
     total_roles = []
@@ -32,25 +32,25 @@ def get_chatgpt_response(context):
     total_winrate = []
     for match in match_list:
         match_data = match['graphic_data']
-        champ = match_data.championName
+        champ = match_data['championName']
         if champ:
             total_champs.append(champ)
-        role = match_data.role
+        role = match_data['role']
         if role:
             total_roles.append(role)
-        lane = match_data.lane
+        lane = match_data['lane']
         if lane:
             total_lanes.append(lane)
-        kills = match_data.kills
+        kills = match_data['kills']
         if kills:
             total_kills.append(kills)
-        deaths = match_data.deaths
+        deaths = match_data['deaths']
         if deaths:
             total_deaths.append(deaths)
-        assists = match_data.assists
+        assists = match_data['assists']
         if assists:
             total_assists.append(assists)
-        win = match_data.win
+        win = match_data['win']
         if win == True:
             total_winrate.append('Ganada')
         else:
@@ -63,7 +63,7 @@ def get_chatgpt_response(context):
              
         prompt = (
         f'Eres un experto en análisis de jugadores de League of Legends.' 
-        f'Da consejos que permitan al jugador {summoner} entender sus fortalezas y debilidades'
+        f'Da consejos que permitan al jugador {summoner} entender sus fortalezas y debilidades en 10 líneas de texto'
         'con los siguientes datos generales de su cuenta y de sus últimas 10 partidas.'
         f'El jugador es {tier} {rango}, con un porcentaje de victorias de {winrate}.'
         f'En sus últimas 10 partidas, utilizó los siguientes campeones {total_champs},'
@@ -84,14 +84,14 @@ def get_chatgpt_response(context):
         return None
 
 def comparacion_gemini(context):
-    summonerA_name = context['summonerA']['summoner'].summoner_name
-    summonerB_name = context['summonerB']['summoner'].summoner_name
+    summonerA_name = context['summonerA']['summoner']['summoner_name']
+    summonerB_name = context['summonerB']['summoner']['summoner_name']
     summonerA_winrate = context['summonerA']['winrate']
     summonerB_winrate = context['summonerB']['winrate']
-    summonerA_totalwins = context['summonerA']['summoner'].total_wins
-    summonerB_totalwins = context['summonerB']['summoner'].total_wins
-    summonerA_totalLosses = context['summonerA']['summoner'].total_losses
-    summonerB_totalLosses = context['summonerB']['summoner'].total_losses
+    summonerA_totalwins = context['summonerA']['summoner']['total_wins']
+    summonerB_totalwins = context['summonerB']['summoner']['total_wins']
+    summonerA_totalLosses = context['summonerA']['summoner']['total_losses']
+    summonerB_totalLosses = context['summonerB']['summoner']['total_losses']
     summonerA_champions = []
     summonerB_champions = []
     summonerA_lanes = []
@@ -103,26 +103,26 @@ def comparacion_gemini(context):
 
     
     for match in context['summonerA']['match_details']:
-        champion = match['graphic_data'].championName
+        champion = match['graphic_data']['championName']
         summonerA_champions.append(champion)
-        lane = match['graphic_data'].lane
+        lane = match['graphic_data']['lane']
         summonerA_lanes.append(lane)
-        role = match['graphic_data'].role
+        role = match['graphic_data']['role']
         summonerA_roles.append(role)
-        wins = match['graphic_data'].win
+        wins = match['graphic_data']['win']
         if wins == True:
             summonerA_wins.append('Ganada')
         else:
             summonerA_wins.append('Perdida')
         
     for match in context['summonerB']['match_details']:
-        champion = match['graphic_data'].championName
+        champion = match['graphic_data']['championName']
         summonerB_champions.append(champion)
-        lane = match['graphic_data'].lane
+        lane = match['graphic_data']['lane']
         summonerB_lanes.append(lane)
-        role = match['graphic_data'].role
+        role = match['graphic_data']['role']
         summonerB_roles.append(role)
-        wins = match['graphic_data'].win
+        wins = match['graphic_data']['win']
         if wins == True:
             summonerB_wins.append('Ganada')
         else:

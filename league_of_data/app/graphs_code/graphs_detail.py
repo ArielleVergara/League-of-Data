@@ -24,7 +24,9 @@ def extract_data(time_info):
         data_list.append(data)
     return data_list
 
-def generate_graphs(time_info, match_id):
+def generate_graphs(match_details, match_id):
+    print(match_details)
+    time_info = match_details['time_info']
     data_list = extract_data(time_info)
     if not data_list:
         print(f"No hay datos en time_info para la partida {match_id} ")
